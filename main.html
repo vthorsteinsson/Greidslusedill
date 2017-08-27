@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="is">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Jafngreiðslulán sett fram myndrænt">
+<meta name="application-name" content="Myndrænn greiðsluseðill">
+
+<!-- Apple iPhone and iPad touch icons -->
+<!--
+<link rel="apple-touch-icon" sizes="120x120" href="/touch-icon-iphone-retina.png">
+<link rel="apple-touch-icon" sizes="152x152" href="/touch-icon-ipad-retina.png">
+-->
+<link rel="apple-touch-icon" sizes="76x76" href="assets/img/apple-icon.png">
+<link rel="icon" type="image/png" href="assets/img/favicon.png">
+
+ <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+<title>Myndrænn greiðsluseðill</title>
+
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons"
+   rel="stylesheet" />
+<link href='https://fonts.googleapis.com/css?family=Roboto:300,400,500,700'
+   rel='stylesheet'>
+<link href="https://maxcdn.bootstrapcdn.com/font-awesome/latest/css/font-awesome.min.css"
+   rel="stylesheet" />
+
+<!-- BOOTSTRAP CSS environment: see getbootstrap.com -->
+<!-- Latest compiled and minified CSS -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+<!-- Material theme -->
+<link href="assets/css/material-kit.css" rel="stylesheet"/>
+
+<!-- Optional theme -->
+<!-- <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css"> -->
+
+<style>
+
+   div.container {
+      max-width: 960px;
+   }
+
+   #header h2 {
+      font-weight: 400;
+      margin-bottom: 4px;
+   }
+
+   #header h3 {
+      line-height: 1.00;
+      margin-top: 0px;
+      padding-top: 0px;
+      padding-bottom: 18px;
+   }
+
+   .clickable {
+      cursor: pointer;   
+   }
+
+   .panel-heading span {
+      margin-top: -20px;
+      font-size: 15px;
+   }
+
+   div.result {
+      display: none;
+   }
+
+   table#pmts {
+      text-align: right;
+   }
+
+   table#pmts th {
+      text-align: right;
+   }
+
+   table#pmts .date {
+      text-align: left;
+   }
+
+   g text {
+      font-family: 'Roboto', 'Helvetica Neue', 'Arial', sans-serif;
+   }
+
+   .axis text {
+      font-size: 12px;
+      line-height: 12px;
+   }
+
+   .legend-interest text {
+      font-size: 22px;
+      line-height: 22px;
+      fill: white;
+      font-weight: 500;
+      text-anchor: start;
+   }
+
+   .legend-amort text {
+      font-size: 22px;
+      line-height: 22px;
+      fill: white;
+      font-weight: 500;
+      text-anchor: end;
+   }
+
+   .axis path,
+   .axis line {
+      fill: none;
+      stroke: #000;
+   }
+
+   .background {
+      stroke-width: 0;
+      fill: whitesmoke;
+   }
+
+   .bar {
+      stroke-width: 0;
+   }
+
+   .bar.principal {
+      fill: steelblue;
+   }
+
+   .bar.principal.past {
+      fill: skyblue;
+   }
+
+   #results-inflated .bar.principal {
+      fill: mediumorchid;
+   }
+
+   #results-inflated .bar.principal.past {
+      fill: plum;
+   }
+
+   .bar.amort {
+      fill: seagreen;
+   }
+
+   .bar.amort.past {
+      fill: mediumseagreen;
+   }
+
+   .bar.interest {
+      fill: tomato;
+   }
+
+   .bar.interest.past {
+      fill: lightcoral;
+   }
+
+   .bar.infl {
+      fill: gold;
+   }
+
+   .bar.infl.future {
+      fill: silver;
+   }
+
+   .bar.now {
+      /* fill: red; */
+   }
+
+   .bar.hover {
+      fill: orange;
+   }
+
+   .bar:hover {
+      fill: orange;
+   }
+
+   .bar.principal:hover { /* !!! TODO: find out why this is necessary */
+      fill: orange;
+   }
+
+   #results-inflated .bar.principal:hover {
+      fill: orange;
+   }
+
+   .bar.amort:hover {
+      fill: orange;
+   }
+
+   .bar.interest:hover {
+      fill: orange;
+   }
+
+   .y.axis text {
+      text-anchor: end;
+      z-order: 20;
+   }
+
+   div.tooltip {
+      position: absolute;
+      text-align: center;
+      width: 76px;
+      height: auto;
+      padding: 3px;
+      padding-left: 5px;
+      padding-right: 5px;
+      font-size: 12px;
+      color: white;
+      background: black;
+      opacity: 0;
+      border: 0px;
+      border-radius: 3px;
+      pointer-events: none;
+   }
+
+   div.tooltip div:after {
+      box-sizing: border-box;
+      display: inline;
+      font-size: 14px;
+      width: 100%;
+      line-height: 1;
+      color: black;
+      content: "\25BC";
+      position: absolute;
+      left: 0px;
+      text-align: center;
+   }
+
+   div#numpmt-status {
+      margin-top: 58px; /* !!! TODO: find out why this is necessary */
+   }
+
+   label#explain-wrong {
+      margin-top: 8px;
+   }
+
+   span.form-control-feedback {
+      top: 6px;
+      right: -8px;
+   }
+
+   span.form-control-feedback.pull-left {
+      right: 34px;
+   }
+
+</style>
+
+</head>
+
+<body role="document">
+
+   <div class="container" role="main">
+   
+      <div class="row">
+         <div class="col-xs-12 col-sm-7" id="header">
+            <h2>Myndrænn greiðsluseðill</h2>
+            <h3>verðtryggðs jafngreiðsluláns</h3>
+         </div>
+         <div class="col-xs-12 col-sm-5">
+            <h3 align="right"><small>eftir Vilhjálm Þorsteinsson</small></h3>
+         </div>
+      </div>
+
+      <div class="row">
+         <div class="col-xs-12">
+            <div class="panel panel-primary">
+               <div class="panel-heading">
+                  <h3 class="panel-title">Upplýsingar um lánið þitt</h3>
+               </div>
+               <div class="panel-body">
+                  <div class="row">
+                  <div class="col-xs-12 col-sm-4">
+                     <div id="amount-status" class="form-group label-floating">
+                        <label for="amount" class="control-label">Upphafleg lánsfjárhæð</label>
+                        <div class="input-group">
+                           <div>
+                              <input type="text" name="amount" id="amount" maxlength=15
+                                 class="form-control">
+                              <span class="form-control-feedback pull-left"></span>
+                           </div>
+                           <span class="input-group-addon">kr.</span>
+                        </div>
+                     </div>
+                  </div>
+                  </div>
+                  <div class="row">
+                  <div class="col-xs-6 col-sm-3">
+                     <div class="form-group">
+                        <label for="taken-month" class="control-label">Lántökumánuður</label>
+                        <select class="form-control" id="taken-month">
+                           <option value="01">Janúar</option>
+                           <option value="02">Febrúar</option>
+                           <option value="03">Mars</option>
+                           <option value="04">Apríl</option>
+                           <option value="05">Maí</option>
+                           <option value="06">Júní</option>
+                           <option value="07" selected>Júlí</option>
+                           <option value="08">Ágúst</option>
+                           <option value="09">September</option>
+                           <option value="10">Október</option>
+                           <option value="11">Nóvember</option>
+                           <option value="12">Desember</option>
+                        </select>
+                     </div>
+                  </div>
+                  <div class="col-xs-6 col-sm-3">
+                     <div class="form-group">
+                        <label for="taken-year" class="control-label">Ár</label>
+                        <select class="form-control" id="taken-year">
+                           <!-- Filled in by init() function -->
+                        </select>
+                     </div>
+                  </div>
+                  <div class="col-xs-12 col-sm-6">
+                     <div id="numpmt-status" class="form-group label-floating">
+                        <label for="numpmt" class="control-label">Fjöldi afborgana (480 ef 40 ár, 300 ef 25 ár)</label>
+                        <input type="text" name="numpmt" id="numpmt" value="480"
+                           maxlength="3" class="form-control">
+                        <span class="form-control-feedback"></span>
+                     </div>
+                  </div>
+                  </div>
+                  <div class="row">
+                  <div class="col-xs-12 col-sm-4">
+                     <div id="interest-status" class="form-group label-floating">
+                        <label for="interest" class="control-label">Vextir</label>
+                        <div class="input-group">
+                           <div>
+                              <input type="text" name="interest" id="interest"
+                                 maxlength="5" class="form-control">
+                              <span class="form-control-feedback pull-left"></span>
+                           </div>
+                           <span class="input-group-addon">%</span>
+                        </div>
+                     </div>
+                  </div>
+                  <div class="col-xs-offset-0 col-sm-offset-2"></div>
+                  <div class="col-xs-12 col-sm-6">
+                     <div class="form-group">
+                        <div class="togglebutton">
+                           <label id="explain-wrong">
+                              <input type="checkbox" name="wrong" id="wrong" value="wrong" checked="">
+                                 Nota ársvexti / 12
+                           </label>
+                        </div>
+                     </div>
+                  </div>
+                  </div>
+                  <div class="row">
+                  <div class="col-xs-12">
+                     <div class="form-group pull-right">
+                        <button type="submit" id="submit" class="btn btn-primary">
+                           <span class="glyphicon glyphicon-play"></span>&nbsp;&nbsp;Sýna myndrænt
+                        </button>
+                     </div>
+                  </div>
+                  </div>
+               </div>
+            </div>
+         </div>
+      </div>
+      
+      <div class="row result" id="results-about">
+         <div class="col-xs-12">
+            <div class="panel panel-success">
+               <div class="panel-heading clickable">
+                  <h3 class="panel-title">Nánar um lánið</h3>
+                  <span class="pull-right"><i class="glyphicon glyphicon-chevron-up"></i></span>
+               </div>
+               <div class="panel-body">
+                  <div class="col-sm-12">
+                     <p>Lánið ber <b><span class="result-interest"></span>%</b> virka ársvexti,
+                     eða <b><span id="result-monthly-interest"></span>%</b> mánaðarlega vexti.</p>
+                     <p>Vísitala neysluverðs var <b><span id="result-basevnv"></span></b> þegar lánið var tekið, en hún er núna <b><span id="result-vnv-now"></span></b>.
+                     Það samsvarar <b><span id="result-inflation"></span>%</b> árlegri
+                     meðalverðbólgu (rýrnun krónunnar).</p>
+                     <p>Á upphaflegu verðlagi væru jafnar greiðslur af láninu (afborgun og vextir)
+                     <b><span class="result-pmt"></span></b> krónur á mánuði
+                     allan lánstímann, en á verðlagi dagsins í dag er mánaðarleg greiðsla
+                     <b><span class="result-pmt-now"></span></b> krónur.
+                     Á upphaflegu verðlagi næmu endurgreiðslur lánsins samtals
+                     <b><span id="result-total"></span></b> krónum, en á núverandi
+                     verðlagi <b><span id="result-total-now"></span></b> krónum.</p>
+                     <p id="wrong-cost">Því má við bæta að ef virkir ársvextir lánsins væru
+                     <b><span id="result-interest-nominal"></span>%</b> í stað
+                     <b><span class="result-interest"></span>%</b> þá næmu endurgreiðslur
+                     samtals <b><span id="result-total-correct"></span></b> kr.
+                     á verðlagi dagsins. Þar munar <b><span id="result-total-diff"></span></b>
+                     krónum.</p>
+                  </div>
+               </div>
+            </div>
+         </div>
+      </div>
+      
+      <div class="row result" id="results-payments">
+         <div class="col-xs-12">
+            <div class="panel panel-danger">
+               <div class="panel-heading clickable panel-collapsed">
+                  <h3 class="panel-title">Greiðslur af láninu yfir tíma</h3>
+                  <span class="pull-right"><i class="glyphicon glyphicon-chevron-down"></i></span>
+               </div>
+               <div class="panel-body">
+                  <p>Hér sjást allir gjalddagar lánsins, <b>á upphaflegu verðlagi</b> þess.</p>
+                  <table class="table table-condensed" id="pmts">
+                     <thead>
+                        <th>Nr.</th>
+                        <th class="date">Dags.</th>
+                        <th>Í byrjun</th>
+                        <th>Afborgun</th>
+                        <th>+ vextir</th>
+                        <th>= greiðsla</th>
+                        <th>Í lok</th>
+                     </thead>
+                     <tbody id="payments">
+                        <!-- Payments will be inserted here -->
+                     </tbody>
+                  </table>
+               </div>
+            </div>
+         </div>
+      </div>
+      
+      <div class="row result" id="results-principal">
+         <div class="col-xs-12">
+            <div class="panel panel-info">
+               <div class="panel-heading clickable">
+                  <h3 class="panel-title">Þróun eftirstöðva lánsins á upphaflegu verðlagi þess</h3>
+                  <span class="pull-right"><i class="glyphicon glyphicon-chevron-up"></i></span>
+               </div>
+               <div class="panel-body">
+                  <div class="col-sm-12">
+                     <p>Hér sést hvernig eftirstöðvar jafngreiðslulánsins lækka með
+                     tíma, <b>á upphaflegu verðlagi
+                     þess</b>. Farðu með músina yfir grafið til að sjá upphæðina í byrjun
+                     hvers mánaðar.</p>
+                     <p class="small">Litaskilin eru við daginn í dag,
+                     þ.e milli fortíðar og framtíðar. Lóðrétti ásinn
+                     er í milljónum króna.</p>
+                  </div>
+                  <div class="col-sm-12" id="canvas-principal">
+                     <!-- SVG stuff is inserted here -->
+                  </div>
+               </div>
+            </div>
+         </div>
+      </div>
+
+      <div class="row result" id="results-amort">
+         <div class="col-xs-12">
+            <div class="panel panel-warning">
+               <div class="panel-heading clickable">
+                  <h3 class="panel-title">Afborganir og vextir á upphaflegu verðlagi lánsins</h3>
+                  <span class="pull-right"><i class="glyphicon glyphicon-chevron-up"></i></span>
+               </div>
+               <div class="panel-body">
+                  <div class="col-sm-12">
+                     <p>Hér sjást afborganir og vextir jafngreiðslulánsins, <b>á upphaflegu verðlagi
+                     þess</b>. Jafngreiðslan er <b><span class="result-pmt"></span>
+                     krónur á mánuði</b>, og skiptist í afborgun og vexti eins og hér sést.
+                     Farðu með músina yfir
+                     grafið til að sjá upphæðir hvers mánaðar.</p>
+                     <p class="small">Litaskilin eru við daginn í dag,
+                     þ.e. milli fortíðar og framtíðar. Lóðrétti ásinn er í þúsundum króna.</p>
+                  </div>
+                  <div class="col-sm-12" id="canvas-payments">
+                     <!-- SVG stuff is inserted here -->
+                  </div>
+               </div>
+            </div>
+         </div>
+      </div>
+
+      <div class="row result" id="results-inflation">
+         <div class="col-xs-12">
+            <div class="panel panel-default">
+               <div class="panel-heading clickable">
+                  <h3 class="panel-title">Rýrnun krónunnar vegna verðbólgu</h3>
+                  <span class="pull-right"><i class="glyphicon glyphicon-chevron-up"></i></span>
+               </div>
+               <div class="panel-body">
+                  <div class="col-sm-12">
+                     <p>Hér sést hvernig íslenska krónan hefur rýrnað vegna verðbólgu
+                     síðan lánið var tekið.
+                     <b>Kaupmáttur 1.000 króna</b> er sýndur á hverjum tíma,
+                     í hlutfalli við kaupmátt 1.000 króna eins og hann var
+                     í upphafi lánstímans. Miðað er við vísitölu neysluverðs.</p>
+                  </div>
+                  <div class="col-sm-12" id="canvas-inflation">
+                     <!-- SVG stuff is inserted here -->
+                  </div>
+               </div>
+               <div class="panel-body">
+                  <div class="col-sm-12">
+                     <p>Hér er „öfug“ sýn á sömu rýrnun. Grafið sýnir <b>hversu margar krónur þurfti</b>
+                     á hverjum tíma til að kaupa sömu neyslukörfu og fékkst fyrir 1.000 krónur
+                     í upphafi lánstímans.</p>
+                  </div>
+                  <div class="col-sm-12" id="canvas-inverse">
+                     <!-- SVG stuff is inserted here -->
+                  </div>
+               </div>
+            </div>
+         </div>
+      </div>
+
+      <div class="row result" id="results-inflated">
+         <div class="col-xs-12">
+            <div class="panel panel-primary">
+               <div class="panel-heading clickable">
+                  <h3 class="panel-title">Eftirstöðvar lánsins í rýrnandi krónum</h3>
+                  <span class="pull-right"><i class="glyphicon glyphicon-chevron-up"></i></span>
+               </div>
+               <div class="panel-body">
+                  <div class="col-sm-12">
+                     <p>Eftir því sem krónan rýrnar <b>þarf fleiri krónur til að samsvara
+                     upphaflegu verðmæti lánsins</b>, og eftirstöðvum þess hverju sinni, eins
+                     og þær hefðu verið á upphaflegu verðlagi.
+                     Með öðrum orðum: Hver upphaflegur þúsundkall kostar meira,
+                     sbr. næsta graf á undan.</p>
+                     <p>Hér eru eftirstöðvar lánsins sýndar eins og þær voru í rýrnandi krónum
+                     hverju sinni, að teknu tilliti til verðbólgu til dagsins í dag.
+                     <b>Frá deginum í dag er lánið sýnt án verðbólgu.</b>
+                     Farðu með músina yfir grafið til að sjá uppreiknaðar
+                     (verðbættar) eftirstöðvar í byrjun hvers mánaðar.</p>
+                     <p class="small">Litaskilin eru við daginn í dag, þ.e. milli fortíðar
+                     og framtíðar. Lóðrétti ásinn er í milljónum króna.</p>
+                  </div>
+                  <div class="col-sm-12" id="canvas-inflated">
+                     <!-- SVG stuff is inserted here -->
+                  </div>
+               </div>
+            </div>
+         </div>
+      </div>
+
+      <div class="row result" id="results-amort-inflated">
+         <div class="col-xs-12">
+            <div class="panel panel-warning">
+               <div class="panel-heading clickable">
+                  <h3 class="panel-title">Afborganir og vextir í rýrnandi krónum</h3>
+                  <span class="pull-right"><i class="glyphicon glyphicon-chevron-up"></i></span>
+               </div>
+               <div class="panel-body">
+                  <div class="col-sm-12">
+                     <p>Hér sjást afborganir og vextir jafngreiðslulánsins, <b>í rýrnandi
+                     krónum hverju sinni</b>. Frá deginum í dag er lánið sýnt án verðbólgu.
+                     Jafngreiðslan, sem upphaflega var <b><span class="result-pmt"></span></b> kr.
+                     á mánuði, er <b><span class="result-pmt-now"></span></b> kr. á verðlagi
+                     dagsins.
+                     Farðu með músina yfir grafið til að sjá upphæðir hvers mánaðar.</p>
+                     <p class="small">Litaskilin eru við daginn í dag,
+                     þ.e. milli fortíðar og framtíðar. Lóðrétti ásinn er í þúsundum króna.</p>
+                  </div>
+                  <div class="col-sm-12" id="canvas-payments-inflated">
+                     <!-- SVG stuff is inserted here -->
+                  </div>
+               </div>
+            </div>
+         </div>
+      </div>
+
+   </div>
+   
+   <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+   <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+   <!-- Latest compiled and minified JavaScript -->
+   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+
+   <!-- Material theme for Bootstrap -->
+   <script src="assets/js/material.min.js"></script>
+   <!--  Plugin for the Sliders, full documentation here: http://refreshless.com/nouislider/ -->
+   <!-- <script src="assets/js/nouislider.min.js" type="text/javascript"></script> -->
+   <!-- Control Center for Material Kit: activating the ripples, parallax effects, scripts from the example pages etc -->
+   <script src="assets/js/material-kit.js" type="text/javascript"></script>
+
+   <!-- D3 graphics library -->
+   <script src="https://d3js.org/d3.v4.min.js"></script>
+
+   <!-- Application logic -->
+   <script src="lan.js"></script>
+
+   <script>
+
+      function showStatus(id, err) {
+         // Show the validation status of a field depending on
+         // whether num is a valid number or not
+         var field = $("#" + id + "-status");
+         if (err) {
+            // Error status
+            field.addClass("has-error");
+            $("span.form-control-feedback", field)
+               .html('<i class="material-icons">clear</i>');
+         }
+         else {
+            field.removeClass("has-error");
+            $("span.form-control-feedback", field)
+               .html("");
+         }
+      }
+
+      function validateAmount() {
+         // Returns the amount entered or NaN if not valid
+         var amt = asCurrency($.trim($("#amount").val()));
+         showStatus("amount", isNaN(amt));
+         return amt;
+      }
+
+      function validateNumPmt() {
+         // Returns the number of payments entered or NaN if not valid
+         var num = asInteger($.trim($("#numpmt").val()));
+         showStatus("numpmt", isNaN(num));
+         return num;
+      }
+
+      function validateInterest() {
+         // Returns the interest percentage entered or NaN if not valid
+         var i = asPercent($.trim($("#interest").val()));
+         showStatus("interest", isNaN(i));
+         return i;
+      }
+
+      function initMaterial() {
+         // Initialize the Material Kit stuff
+         materialKit.initSliders();
+         window_width = $(window).width();
+         if (window_width >= 992) {
+             big_image = $('.wrapper > .header');
+            $(window).on('scroll', materialKitDemo.checkScrollForParallax);
+         }
+      }
+
+      function init() {
+         // initMaterial();
+         $(document).on('click', '.panel-heading.clickable',
+            // Implement collapsible panel headers
+            function(e) {
+               var $this = $(this);
+               if (!$this.hasClass('panel-collapsed')) {
+                  $this.parents('.panel').find('.panel-body').slideUp();
+                  $this.addClass('panel-collapsed');
+                  $this.find('span i').removeClass('glyphicon-chevron-up').addClass('glyphicon-chevron-down');
+               }
+               else {
+                  $this.parents('.panel').find('.panel-body').slideDown();
+                  $this.removeClass('panel-collapsed');
+                  $this.find('span i').removeClass('glyphicon-chevron-down').addClass('glyphicon-chevron-up');
+               }
+            }
+         );
+         $("#submit").click(function(e) {
+            e.preventDefault();
+            var amt = validateAmount();
+            if (isNaN(amt)) {
+               $("#amount").focus();
+               return;
+            }
+            var num = validateNumPmt();
+            if (isNaN(num)) {
+               $("#numpmt").focus();
+               return;
+            }
+            var interest = validateInterest();
+            if (isNaN(interest)) {
+               $("#interest").focus();
+               return;
+            }
+            // Everything validates OK: calculate the loan and display the results
+            calcLoan(amt, interest, num,
+               $("#wrong").is(":checked"),
+               parseInt($("#taken-year").val()),
+               parseInt($("#taken-month").val())
+            );
+         });
+         // The results-payments panel is by default closed
+         $("#results-payments .panel-heading.clickable")
+            .parents(".panel")
+            .find(".panel-body")
+            .css("display", "none");
+         // Initialize the list of years
+         var yearControl = $("#taken-year");
+         for (var year = 1988; year <= 2017; year++) {
+            var ystr = year.toString();
+            var opt = $("<option>").attr("value", ystr).text(ystr);
+            if (year == 2006)
+               // Set a default value of 2006
+               opt.attr("selected", "");
+            yearControl.append(opt);
+         }
+         // Add explanation
+         $("#explain-wrong").attr("title",
+            "ÍLS og bankarnir reikna mánaðarvexti (ranglega) sem ársvexti/12.\n" +
+            "Afhakaðu hér ef þú vilt reikna þá sem ársvexti^(1/12).");
+         // Add amount validation and formatting
+         $("#amount").blur(function(e) {
+            var amt = validateAmount();
+            if (!isNaN(amt))
+               $(this).val(toCurrency(amt));
+         })
+         .focus();
+         // Number of payments
+         $("#numpmt").blur(function(e) {
+            var num = validateNumPmt();
+            if (!isNaN(num))
+               $(this).val(toFixed(num, 0));
+         });
+         // Interest percentage
+         $("#interest").blur(function(e) {
+            var i = validateInterest();
+            if (!isNaN(i))
+               $(this).val(toFixed(i, 2));
+         });
+      }
+
+      $(document).ready(init);
+
+   </script>
+
+</body>
+</html>
