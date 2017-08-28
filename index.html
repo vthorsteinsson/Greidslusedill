@@ -92,6 +92,11 @@
       line-height: 12px;
    }
 
+   .legend-y text {
+      font-size: 14px;
+      line-height: 14px;
+   }
+
    .legend-interest text {
       font-size: 22px;
       line-height: 22px;
@@ -257,7 +262,9 @@
             <h3>verðtryggðs jafngreiðsluláns</h3>
          </div>
          <div class="col-xs-12 col-sm-5">
-            <h3 align="right"><small>eftir Vilhjálm Þorsteinsson</small></h3>
+            <h3 align="right"><small>eftir Vilhjálm Þorsteinsson</small><br>
+            <img src="assets/img/2325.jpg" width="80" height="97" class="img-rounded hidden-xs">
+            </h3>
          </div>
       </div>
 
@@ -340,7 +347,7 @@
                         <div class="togglebutton">
                            <label id="explain-wrong">
                               <input type="checkbox" name="wrong" id="wrong" value="wrong" checked="">
-                                 Nota ársvexti / 12
+                                 Nota vaxtaútreikning ÍLS og bankanna
                            </label>
                         </div>
                      </div>
@@ -348,7 +355,7 @@
                   </div>
                   <div class="row">
                   <div class="col-xs-12">
-                     <div class="form-group pull-right">
+                     <div class="pull-right">
                         <button type="submit" id="submit" class="btn btn-primary">
                            <span class="glyphicon glyphicon-play"></span>&nbsp;&nbsp;Sýna myndrænt
                         </button>
@@ -374,8 +381,7 @@
                      þess</b>. Farðu með músina yfir grafið til að sjá upphæðina í byrjun
                      hvers mánaðar.</p>
                      <p class="small">Litaskilin eru við daginn í dag,
-                     þ.e milli fortíðar og framtíðar. Lóðrétti ásinn
-                     er í milljónum króna.</p>
+                     þ.e milli fortíðar og framtíðar.</p>
                   </div>
                   <div class="col-sm-12" id="canvas-principal">
                      <!-- SVG stuff is inserted here -->
@@ -394,24 +400,36 @@
                </div>
                <div class="panel-body">
                   <div class="col-sm-12">
-                     <p>Lánið ber <b><span class="result-interest"></span>%</b> virka ársvexti,
-                     eða <b><span id="result-monthly-interest"></span>%</b> mánaðarlega vexti.</p>
-                     <p>Vísitala neysluverðs var <b><span id="result-basevnv"></span></b> þegar lánið var tekið, en hún er núna <b><span id="result-vnv-now"></span></b>.
-                     Það samsvarar <b><span id="result-inflation"></span>%</b> árlegri
-                     meðalverðbólgu (rýrnun krónunnar).</p>
-                     <p>Á upphaflegu verðlagi væru jafnar greiðslur af láninu (afborgun og vextir)
-                     <b><span class="result-pmt"></span></b> krónur á mánuði
-                     allan lánstímann, en á verðlagi dagsins í dag er mánaðarleg greiðsla
-                     <b><span class="result-pmt-now"></span></b> krónur.
-                     Á upphaflegu verðlagi næmu endurgreiðslur lánsins samtals
-                     <b><span id="result-total"></span></b> krónum, en á núverandi
-                     verðlagi <b><span id="result-total-now"></span></b> krónum.</p>
-                     <p id="wrong-cost">Því má við bæta að ef virkir ársvextir lánsins væru
-                     <b><span id="result-interest-nominal"></span>%</b> í stað
-                     <b><span class="result-interest"></span>%</b> þá næmu endurgreiðslur
-                     samtals <b><span id="result-total-correct"></span></b> kr.
-                     á verðlagi dagsins. Þar munar <b><span id="result-total-diff"></span></b>
-                     krónum.</p>
+                     <ul>
+
+                        <li>Lánið ber <b><span class="result-interest"></span>%</b> virka ársvexti,
+                        eða <b><span id="result-monthly-interest"></span>%</b> mánaðarlega vexti.</li>
+
+                        <li>Vísitala neysluverðs var <b><span id="result-basevnv"></span></b> þegar lánið var tekið, en hún er núna <b><span id="result-vnv-now"></span></b>.
+                        Það samsvarar <b><span id="result-inflation"></span>%</b> árlegri
+                        meðalverðbólgu (rýrnun krónunnar).</li>
+
+                        <li>Á upphaflegu verðlagi var höfuðstóll lánsins
+                        <b><span id="result-principal"></span></b> krónur, en á núverandi
+                        verðlagi er hann <b><span id="result-principal-now"></span></b> krónur.</li>
+
+                        <li>Á upphaflegu verðlagi væru jafnar greiðslur af láninu (afborgun og vextir)
+                        <b><span class="result-pmt"></span></b> krónur á mánuði
+                        allan lánstímann, en á verðlagi dagsins í dag er mánaðarleg greiðsla
+                        <b><span class="result-pmt-now"></span></b> krónur.</li>
+
+                        <li>Á upphaflegu verðlagi næmu endurgreiðslur lánsins samtals
+                        <b><span id="result-total"></span></b> krónum, en á núverandi
+                        verðlagi <b><span id="result-total-now"></span></b> krónum.</li>
+
+                        <li id="wrong-cost">Því má við bæta að ef virkir ársvextir lánsins væru
+                        <b><span id="result-interest-nominal"></span>%</b> í stað
+                        <b><span class="result-interest"></span>%</b> þá næmu endurgreiðslur
+                        samtals <b><span id="result-total-correct"></span></b> kr.
+                        á verðlagi dagsins. Þar munar <b><span id="result-total-diff"></span></b>
+                        krónum.</li>
+
+                     </ul>
                   </div>
                </div>
             </div>
@@ -461,7 +479,7 @@
                      Farðu með músina yfir
                      grafið til að sjá upphæðir hvers mánaðar.</p>
                      <p class="small">Litaskilin eru við daginn í dag,
-                     þ.e. milli fortíðar og framtíðar. Lóðrétti ásinn er í þúsundum króna.</p>
+                     þ.e. milli fortíðar og framtíðar.</p>
                   </div>
                   <div class="col-sm-12" id="canvas-payments">
                      <!-- SVG stuff is inserted here -->
@@ -524,7 +542,7 @@
                      Farðu með músina yfir grafið til að sjá uppreiknaðar
                      (verðbættar) eftirstöðvar í byrjun hvers mánaðar.</p>
                      <p class="small">Litaskilin eru við daginn í dag, þ.e. milli fortíðar
-                     og framtíðar. Lóðrétti ásinn er í milljónum króna.</p>
+                     og framtíðar.</p>
                   </div>
                   <div class="col-sm-12" id="canvas-inflated">
                      <!-- SVG stuff is inserted here -->
@@ -550,7 +568,7 @@
                      dagsins.
                      Farðu með músina yfir grafið til að sjá upphæðir hvers mánaðar.</p>
                      <p class="small">Litaskilin eru við daginn í dag,
-                     þ.e. milli fortíðar og framtíðar. Lóðrétti ásinn er í þúsundum króna.</p>
+                     þ.e. milli fortíðar og framtíðar.</p>
                   </div>
                   <div class="col-sm-12" id="canvas-payments-inflated">
                      <!-- SVG stuff is inserted here -->
@@ -687,8 +705,8 @@
          }
          // Add explanation
          $("#explain-wrong").attr("title",
-            "ÍLS og bankarnir reikna mánaðarvexti (ranglega) sem ársvexti/12.\n" +
-            "Afhakaðu hér ef þú vilt reikna þá sem tólftu rót af ársvöxtum.");
+            "ÍLS og bankarnir gefa vexti upp sem 12 * mánaðarvexti.\n" +
+            "Afhakaðu hér ef vextirnir eru ársvextir.");
          // Put in default values from the location hash, if any
          if (location.hash && location.hash.charAt(0) == "#") {
             var p = location.hash.slice(1).split("+");

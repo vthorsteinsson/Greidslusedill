@@ -502,11 +502,16 @@ function calcLoan(amount, interest, n, wrong, year, month) {
    $("#result-inflation").text(toFixed(annualInflation, 2));
    $(".result-pmt").text(toCurrency(y));
    $(".result-pmt-now").text(toCurrency(y * nowVNV / baseVNV));
+   // Show principal
+   $("#result-principal").text(toCurrency(amount));
+   var principalNow = amount * nowVNV / baseVNV;
+   $("#result-principal-now").text(toCurrency(principalNow));
+   // Show total amount repaid
    $("#result-total").text(toCurrency(y * n));
    var totalNow = y * n * nowVNV / baseVNV;
    $("#result-total-now").text(toCurrency(totalNow));
    // Display cost of using wrong (r/12) monthly interest?
-   $("#wrong-cost").css("display", wrong ? "block" : "none");
+   $("li#wrong-cost").css("display", wrong ? "list-item" : "none");
    $("#result-interest-nominal").text(toFixed(interest, 2));
    var yCorrect = annuity(amount, n, 12, interest, true);
    var totalCorrect = yCorrect * n * nowVNV / baseVNV;
@@ -641,6 +646,17 @@ function displayPrincipalGraph(ctx, inflated) {
       .attr("class", "x axis")
       .attr("transform", "translate(0," + height + ")")
       .call(xAxis);
+
+   // Draw the Y axis legend
+   g.append("g")
+      .attr("class", "legend-y")
+      .append("text")
+         .attr("x", 6)
+         .attr("y", -margin.left)
+         .attr("dy", "0.8em")
+         .attr("transform", "rotate(270)")
+         .style("text-anchor", "end")
+         .text("m.kr.");
 
    var valueFunc = function(d) {
       // Return the principal of the loan, either inflated or fixed
@@ -794,6 +810,17 @@ function displayPaymentGraph(ctx, inflated) {
    g.append("g")
       .attr("class", "y axis")
       .call(yAxis);
+
+   // Draw the Y axis legend
+   g.append("g")
+      .attr("class", "legend-y")
+      .append("text")
+         .attr("x", 6)
+         .attr("y", -margin.left)
+         .attr("dy", "0.8em")
+         .attr("transform", "rotate(270)")
+         .style("text-anchor", "end")
+         .text("þús.kr.");
 
    var widthFunc = function(d, i) {
       // Make the bar wide enough to reach to the next date
