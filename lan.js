@@ -562,10 +562,33 @@ function calcLoan(amount, interest, n, wrong, year, month) {
 
 function displayPayments(y, a) {
    // Display a tabular payment schedule
+   // with an expansion button in the middle
    $payments = $("#payments");
    $payments.html("");
+   var len = a.length;
+   var middleBar = false;
    $.each(a, function(index, val) {
-      var tr = $("<tr>");
+      var tr;
+      var middle = !(index < 12 || index >= (len - 12));
+      if (!middleBar && middle) {
+         // We don't yet have a middle bar: insert it
+         tr = $("<tr>")
+            .attr("class", "middle-bar")
+            .append(
+               $("<td>")
+                  .attr("colspan", "7")
+                  .append($("<button>")
+                     .attr("type", "submit")
+                     .attr("class", "btn btn-danger")
+                     .text("Smelltu hér til að sjá alla gjalddaga")
+                  )
+            );
+         $payments.append(tr);
+         middleBar = true;
+      }
+      tr = $("<tr>");
+      if (middle)
+         tr.attr("class", "middle");
       tr.append($("<td>").text(val.ix.toFixed(0)));
       tr.append($("<td>").attr("class", "date").text(monthsUC[val.month] + " " + val.year.toFixed(0)));
       tr.append($("<td>").text(toCurrency(val.amt)));
@@ -575,6 +598,14 @@ function displayPayments(y, a) {
       tr.append($("<td>").text(toCurrency(val.newAmt)));
       $payments.append(tr);
    });
+   // Only the first and last 12 months are visible by default
+   $("tr.middle").css("display", "none");
+   // Button to expand the table to cover all payments
+   $("tr.middle-bar button")
+      .click(function(e) {
+         $("tr.middle-bar").css("display", "none");
+         $("tr.middle").css("display", "table-row");
+      });
 }
 
 function displayGraphs(ctx) {

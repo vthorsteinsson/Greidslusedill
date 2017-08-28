@@ -248,6 +248,10 @@
       right: 34px;
    }
 
+   tr.middle-bar td {
+      text-align: center;
+   }
+
 </style>
 
 </head>
@@ -444,7 +448,7 @@
                   <span class="pull-right"><i class="glyphicon glyphicon-chevron-down"></i></span>
                </div>
                <div class="panel-body">
-                  <p>Hér sjást allir gjalddagar lánsins, <b>á upphaflegu verðlagi</b> þess.</p>
+                  <p>Hér sjást gjalddagar lánsins, <b>á upphaflegu verðlagi</b> þess.</p>
                   <table class="table table-condensed" id="pmts">
                      <thead>
                         <th>Nr.</th>
@@ -644,10 +648,46 @@
          return i;
       }
 
+      function submit() {
+         // Validate the current input and calculate the loan if OK
+         var amt = validateAmount();
+         if (isNaN(amt)) {
+            $("#amount").focus();
+            return;
+         }
+         var num = validateNumPmt();
+         if (isNaN(num)) {
+            $("#numpmt").focus();
+            return;
+         }
+         var interest = validateInterest();
+         if (isNaN(interest)) {
+            $("#interest").focus();
+            return;
+         }
+         // Everything validates OK: calculate the loan and display the results
+         var wrong = $("#wrong").is(":checked");
+         var year = parseInt($("#taken-year").val());
+         var month = parseInt($("#taken-month").val());
+         // Encode the parameters in the hash part of the URL
+         location.hash = [amt, interest, num, wrong, year,
+            ("0" + month).slice(-2,2)].join("+");
+         calcLoan(amt, interest, num, wrong, year, month);
+      }
+
       function init() {
-         // initMaterial();
+         // Handle the submit button and the Enter key
+         $("#submit").click(function(e) { e.preventDefault(); submit(); });
+         $(document).keypress(
+            function(e) {
+               if (e.which == 13) {
+                  e.preventDefault();
+                  submit();
+               }
+            }
+         );
+         // Implement collapsible panel headers
          $(document).on('click', '.panel-heading.clickable',
-            // Implement collapsible panel headers
             function(e) {
                var $this = $(this);
                if (!$this.hasClass('panel-collapsed')) {
@@ -662,32 +702,6 @@
                }
             }
          );
-         $("#submit").click(function(e) {
-            e.preventDefault();
-            var amt = validateAmount();
-            if (isNaN(amt)) {
-               $("#amount").focus();
-               return;
-            }
-            var num = validateNumPmt();
-            if (isNaN(num)) {
-               $("#numpmt").focus();
-               return;
-            }
-            var interest = validateInterest();
-            if (isNaN(interest)) {
-               $("#interest").focus();
-               return;
-            }
-            // Everything validates OK: calculate the loan and display the results
-            var wrong = $("#wrong").is(":checked");
-            var year = parseInt($("#taken-year").val());
-            var month = parseInt($("#taken-month").val());
-            // Encode the parameters in the hash part of the URL
-            location.hash = [amt, interest, num, wrong, year,
-               ("0" + month).slice(-2,2)].join("+");
-            calcLoan(amt, interest, num, wrong, year, month);
-         });
          // The results-payments panel is by default closed
          $("#results-payments .panel-heading.clickable")
             .parents(".panel")
