@@ -360,6 +360,31 @@
          </div>
       </div>
       
+      <div class="row result" id="results-principal">
+         <div class="col-xs-12">
+            <div class="panel panel-info">
+               <div class="panel-heading clickable">
+                  <h3 class="panel-title">Þróun eftirstöðva lánsins á upphaflegu verðlagi þess</h3>
+                  <span class="pull-right"><i class="glyphicon glyphicon-chevron-up"></i></span>
+               </div>
+               <div class="panel-body">
+                  <div class="col-sm-12">
+                     <p>Hér sést hvernig eftirstöðvar jafngreiðslulánsins lækka með
+                     tíma, <b>á upphaflegu verðlagi
+                     þess</b>. Farðu með músina yfir grafið til að sjá upphæðina í byrjun
+                     hvers mánaðar.</p>
+                     <p class="small">Litaskilin eru við daginn í dag,
+                     þ.e milli fortíðar og framtíðar. Lóðrétti ásinn
+                     er í milljónum króna.</p>
+                  </div>
+                  <div class="col-sm-12" id="canvas-principal">
+                     <!-- SVG stuff is inserted here -->
+                  </div>
+               </div>
+            </div>
+         </div>
+      </div>
+
       <div class="row result" id="results-about">
          <div class="col-xs-12">
             <div class="panel panel-success">
@@ -421,31 +446,6 @@
          </div>
       </div>
       
-      <div class="row result" id="results-principal">
-         <div class="col-xs-12">
-            <div class="panel panel-info">
-               <div class="panel-heading clickable">
-                  <h3 class="panel-title">Þróun eftirstöðva lánsins á upphaflegu verðlagi þess</h3>
-                  <span class="pull-right"><i class="glyphicon glyphicon-chevron-up"></i></span>
-               </div>
-               <div class="panel-body">
-                  <div class="col-sm-12">
-                     <p>Hér sést hvernig eftirstöðvar jafngreiðslulánsins lækka með
-                     tíma, <b>á upphaflegu verðlagi
-                     þess</b>. Farðu með músina yfir grafið til að sjá upphæðina í byrjun
-                     hvers mánaðar.</p>
-                     <p class="small">Litaskilin eru við daginn í dag,
-                     þ.e milli fortíðar og framtíðar. Lóðrétti ásinn
-                     er í milljónum króna.</p>
-                  </div>
-                  <div class="col-sm-12" id="canvas-principal">
-                     <!-- SVG stuff is inserted here -->
-                  </div>
-               </div>
-            </div>
-         </div>
-      </div>
-
       <div class="row result" id="results-amort">
          <div class="col-xs-12">
             <div class="panel panel-warning">
@@ -609,6 +609,9 @@
       function validateNumPmt() {
          // Returns the number of payments entered or NaN if not valid
          var num = asInteger($.trim($("#numpmt").val()));
+         if (num > 600)
+            // 50 years absolute maximum
+            num = NaN;
          showStatus("numpmt", isNaN(num));
          return num;
       }
@@ -616,18 +619,11 @@
       function validateInterest() {
          // Returns the interest percentage entered or NaN if not valid
          var i = asPercent($.trim($("#interest").val()));
+         if (i > 20.0)
+            // 20 percent maximum
+            i = NaN;
          showStatus("interest", isNaN(i));
          return i;
-      }
-
-      function initMaterial() {
-         // Initialize the Material Kit stuff
-         materialKit.initSliders();
-         window_width = $(window).width();
-         if (window_width >= 992) {
-             big_image = $('.wrapper > .header');
-            $(window).on('scroll', materialKitDemo.checkScrollForParallax);
-         }
       }
 
       function init() {
@@ -666,11 +662,13 @@
                return;
             }
             // Everything validates OK: calculate the loan and display the results
-            calcLoan(amt, interest, num,
-               $("#wrong").is(":checked"),
-               parseInt($("#taken-year").val()),
-               parseInt($("#taken-month").val())
-            );
+            var wrong = $("#wrong").is(":checked");
+            var year = parseInt($("#taken-year").val());
+            var month = parseInt($("#taken-month").val());
+            // Encode the parameters in the hash part of the URL
+            location.hash = [amt, interest, num, wrong, year,
+               ("0" + month).slice(-2,2)].join("+");
+            calcLoan(amt, interest, num, wrong, year, month);
          });
          // The results-payments panel is by default closed
          $("#results-payments .panel-heading.clickable")
@@ -690,7 +688,23 @@
          // Add explanation
          $("#explain-wrong").attr("title",
             "ÍLS og bankarnir reikna mánaðarvexti (ranglega) sem ársvexti/12.\n" +
-            "Afhakaðu hér ef þú vilt reikna þá sem ársvexti^(1/12).");
+            "Afhakaðu hér ef þú vilt reikna þá sem tólftu rót af ársvöxtum.");
+         // Put in default values from the location hash, if any
+         if (location.hash && location.hash.charAt(0) == "#") {
+            var p = location.hash.slice(1).split("+");
+            if (p[0] !== undefined)
+               $("#amount").val(p[0]);
+            if (p[1] !== undefined)
+               $("#interest").val(p[1]);
+            if (p[2] !== undefined)
+               $("#numpmt").val(p[2]);
+            if (p[3] !== undefined)
+               $("#wrong").prop("checked", p[3] != "false");
+            if (p[4] !== undefined)
+               $("#taken-year").val(p[4]);
+            if (p[5] !== undefined)
+               $("#taken-month").val(p[5]);
+         }
          // Add amount validation and formatting
          $("#amount").blur(function(e) {
             var amt = validateAmount();
