@@ -5,8 +5,8 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="Jafngreiðslulán sett fram myndrænt">
-<meta name="application-name" content="Myndrænn greiðsluseðill">
+<meta name="description" content="Jafngreiðslulán útskýrt og sett fram myndrænt">
+<meta name="application-name" content="Lánið mitt">
 
 <!-- Apple iPhone and iPad touch icons -->
 <!--
@@ -22,7 +22,7 @@
       <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
     <![endif]-->
 
-<title>Myndrænn greiðsluseðill</title>
+<title>Lánið mitt</title>
 
 <link href="https://fonts.googleapis.com/icon?family=Material+Icons"
    rel="stylesheet" />
@@ -37,9 +37,6 @@
 <!-- Material theme -->
 <link href="assets/css/material-kit.css" rel="stylesheet"/>
 
-<!-- Optional theme -->
-<!-- <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css"> -->
-
 <style>
 
    div.container {
@@ -52,7 +49,7 @@
    }
 
    #header h3 {
-      line-height: 1.00;
+      line-height: 1.25;
       margin-top: 0px;
       padding-top: 0px;
       padding-bottom: 18px;
@@ -262,8 +259,8 @@
    
       <div class="row">
          <div class="col-xs-12 col-sm-7" id="header">
-            <h2>Myndrænn greiðsluseðill</h2>
-            <h3>verðtryggðs jafngreiðsluláns</h3>
+            <h2>Lánið mitt</h2>
+            <h3>Verðtryggð jafngreiðslulán<br>sett fram myndrænt</h3>
          </div>
          <div class="col-xs-12 col-sm-5">
             <h3 align="right"><small>eftir Vilhjálm Þorsteinsson</small><br>
@@ -380,9 +377,15 @@
                </div>
                <div class="panel-body">
                   <div class="col-sm-12">
-                     <p>Hér sést hvernig eftirstöðvar jafngreiðslulánsins lækka með
-                     tíma, <b>á upphaflegu verðlagi
-                     þess</b>. Farðu með músina yfir grafið til að sjá upphæðina í byrjun
+                     <p>Eins og nafnið bendir til eru jafngreiðslulán stillt af þannig að
+                     þú greiðir alltaf jafngilda fjárhæð af láninu mánaðarlega. Sú fjárhæð
+                     skiptist í afborgun og vexti. Afborgunin er lægri framan af láninu en
+                     hækkar með tímanum. Á móti eru vextirnir hærri framan af en lækka þegar
+                     fram í sækir.</p>
+                     <p>Hér er jafngreiðslulánið þitt eins og upphaflega var til þess stofnað.
+                     Á grafinu sjást eftirstöðvar lánsins lækka með
+                     tíma, <b>á upphaflegu verðlagi þess</b>, hægt fyrst en svo hraðar í lokin.
+                     Farðu með músina yfir grafið til að sjá upphæðina í byrjun
                      hvers mánaðar.</p>
                      <p class="small">Litaskilin eru við daginn í dag,
                      þ.e milli fortíðar og framtíðar.</p>
@@ -398,9 +401,9 @@
       <div class="row result" id="results-about">
          <div class="col-xs-12">
             <div class="panel panel-success">
-               <div class="panel-heading clickable">
+               <div class="panel-heading clickable panel-collapsed">
                   <h3 class="panel-title">Nánar um lánið</h3>
-                  <span class="pull-right"><i class="glyphicon glyphicon-chevron-up"></i></span>
+                  <span class="pull-right"><i class="glyphicon glyphicon-chevron-down"></i></span>
                </div>
                <div class="panel-body">
                   <div class="col-sm-12">
@@ -502,6 +505,9 @@
                </div>
                <div class="panel-body">
                   <div class="col-sm-12">
+                     <p>Þar sem lánið er verðtryggt hafa verðbólga og rýrnandi verðgildi
+                     krónunnar mikið að segja um stöðu þess hverju sinni og greiðslur af því
+                     í framtíðinni.</p>
                      <p>Hér sést hvernig íslenska krónan hefur rýrnað vegna verðbólgu
                      síðan lánið var tekið.
                      <b>Kaupmáttur 1.000 króna</b> er sýndur á hverjum tíma,
@@ -712,6 +718,11 @@
          );
          // The results-payments panel is by default closed
          $("#results-payments .panel-heading.clickable")
+            .parents(".panel")
+            .find(".panel-body")
+            .css("display", "none");
+         // The results-about panel is by default closed
+         $("#results-about .panel-heading.clickable")
             .parents(".panel")
             .find(".panel-body")
             .css("display", "none");
