@@ -648,23 +648,17 @@
          return i;
       }
 
-      function submit() {
+      function checkAndUpdate() {
          // Validate the current input and calculate the loan if OK
          var amt = validateAmount();
-         if (isNaN(amt)) {
-            $("#amount").focus();
-            return;
-         }
+         if (isNaN(amt))
+            return "#amount";
          var num = validateNumPmt();
-         if (isNaN(num)) {
-            $("#numpmt").focus();
-            return;
-         }
+         if (isNaN(num))
+            return "#numpmt";
          var interest = validateInterest();
-         if (isNaN(interest)) {
-            $("#interest").focus();
-            return;
-         }
+         if (isNaN(interest))
+            return "#interest";
          // Everything validates OK: calculate the loan and display the results
          var wrong = $("#wrong").is(":checked");
          var year = parseInt($("#taken-year").val());
@@ -673,6 +667,20 @@
          location.hash = [amt, interest, num, wrong, year,
             ("0" + month).slice(-2,2)].join("+");
          calcLoan(amt, interest, num, wrong, year, month);
+      }
+
+      function submit() {
+         // Validate input fields; if error, focus on the error field.
+         // Otherwise, update the displayed data.
+         var errField = checkAndUpdate();
+         if (errField !== undefined) {
+            $(errField).focus();
+         }
+      }
+
+      function update() {
+         // Update the current view, if everything validates OK
+         checkAndUpdate();
       }
 
       function init() {
@@ -740,22 +748,36 @@
          // Add amount validation and formatting
          $("#amount").blur(function(e) {
             var amt = validateAmount();
-            if (!isNaN(amt))
+            if (!isNaN(amt)) {
                $(this).val(toCurrency(amt));
+               update();
+            }
          })
          .focus();
          // Number of payments
          $("#numpmt").blur(function(e) {
             var num = validateNumPmt();
-            if (!isNaN(num))
+            if (!isNaN(num)) {
                $(this).val(toFixed(num, 0));
+               update();
+            }
          });
          // Interest percentage
          $("#interest").blur(function(e) {
             var i = validateInterest();
-            if (!isNaN(i))
+            if (!isNaN(i)) {
                $(this).val(toFixed(i, 2));
+               update();
+            }
          });
+         // Wrong
+         $("#wrong").change(function(e) { update(); });
+         // Year
+         $("#taken-year").change(function(e) { update(); });
+         // Month
+         $("#taken-month").change(function(e) { update(); });
+         // Display the initial data, if everything validates OK
+         update();
       }
 
       $(document).ready(init);

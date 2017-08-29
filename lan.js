@@ -580,7 +580,11 @@ function displayPayments(y, a) {
                   .append($("<button>")
                      .attr("type", "submit")
                      .attr("class", "btn btn-danger")
-                     .text("Smelltu hér til að sjá alla gjalddaga")
+                     .text(" Smelltu hér til að sjá alla gjalddaga")
+                     .prepend($("<i>")
+                        .attr("class", "material-icons")
+                        .text("zoom_in")
+                     )
                   )
             );
          $payments.append(tr);
