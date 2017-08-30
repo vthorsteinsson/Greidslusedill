@@ -499,7 +499,7 @@ function calcLoan(amount, interest, n, wrong, year, month) {
    var months = (yearNow - year) * 12 + monthNow - (month - 1) + 1;
    var monthlyInflation = months > 0 ? Math.pow(nowVNV / baseVNV, (1 / months)) : 1.0;
    var annualInflation = (Math.pow(monthlyInflation, 12) - 1) * 100;
-   $("#result-inflation").text(toFixed(annualInflation, 2));
+   $(".result-inflation").text(toFixed(annualInflation, 2));
    $(".result-pmt").text(toCurrency(y));
    $(".result-pmt-now").text(toCurrency(y * nowVNV / baseVNV));
    // Show principal
@@ -544,17 +544,18 @@ function calcLoan(amount, interest, n, wrong, year, month) {
       // Update running principal
       G = nG;
    }
-   // The divs must have display: block for width calculations to work
-   $("div.result").css("visibility", "hidden").css("display", "block");
-   displayPayments(y, a.slice(0, -1)); // Display all except final sentinel
    // Create a context object with loan information
    var ctx = {
       year : year,
       month : month - 1,
       baseVNV : baseVNV,
       payment : y,
-      a : a
+      a : a,
+      annualInflation : annualInflation
    };
+   // The divs must have display: block for width calculations to work
+   $("div.result").css("visibility", "hidden").css("display", "block");
+   displayPayments(y, a.slice(0, -1)); // Display all except final sentinel
    displayGraphs(ctx);
    // Everything is ready: show it
    $("div.result").css("visibility", "visible");
@@ -624,6 +625,8 @@ function displayGraphs(ctx) {
    displayPrincipalGraph(ctx, true);
    // Display inflated payments
    displayPaymentGraph(ctx, true);
+   // Initialize the select control for inflation premises
+   setInflationOptions("#inflation-future", ctx.annualInflation);
 }
 
 function displayPrincipalGraph(ctx, inflated) {
@@ -722,48 +725,56 @@ function displayPrincipalGraph(ctx, inflated) {
       return Math.max(1, x(a[i+1].date) - x(a[i].date));
    };
 
-   // Draw bars representing the principal of the loan
-   var bars = g.selectAll("rect.bar.principal")
-      .data(a, function(d) { return d.date.toISOString(); }); // Key function
+   var makeBars = function(cls, valueFunc, inflated) {
+      // Draw bars representing the principal of the loan
+      var bars = g.selectAll("rect.bar." + cls)
+         .data(a, function(d) { return d.date.toISOString(); }); // Key function
 
-   bars
-      // New bars: create
-      .enter().append("rect")
-         .attr("class", function(d) {
-            if (d.year == yearNow && d.month == monthNow)
-               return "bar principal now";
-            if (d.year < yearNow || (d.year == yearNow && d.month < monthNow))
-               return "bar principal past";
-            return "bar principal";
-         })
-         .attr("x", function(d) { return x(d.date); })
-         .attr("width", widthFunc)
-         .on("mouseover", function(d, i) {
-            tooltip.transition()
-               .duration(100)
-               .style("opacity", .8);
-            tooltipText
-               .html("<b>" + monthsUC[d.month] + " " + d.year + "</b><br>" +
-                  toCurrency(valueFunc(d)) + "<br>");
-            tooltip
-               .style("left", (x(d.date) + widthFunc(d, i) / 2 + margin.left - 23) + "px")
-               .style("top", (y(valueFunc(d)) - 30) + "px");
-            if (inflated)
-               // Also highlight the same month on the inverse inflation graph
-               $("#inv-" + keyYM(d.year, d.month)).addClass("hover");
-         })
-         .on("mouseout", function(d) {
-            tooltip.transition()
-               .duration(100)
-               .style("opacity", 0);
-            if (inflated)
-               // Remove highlight from the same month on the inverse inflation graph
-               $("#inv-" + keyYM(d.year, d.month)).removeClass("hover");
-         })
-      // New and existing bars: update
-      .merge(bars)
-         .attr("y", function(d) { return y(valueFunc(d)); })
-         .attr("height", function(d) { return Math.max(0, height - y(valueFunc(d))); })
+      bars
+         // New bars: create
+         .enter().append("rect")
+            .attr("class", function(d) {
+               if (d.year == yearNow && d.month == monthNow)
+                  return "bar now " + cls;
+               if (d.year < yearNow || (d.year == yearNow && d.month < monthNow))
+                  return "bar past " + cls;
+               return "bar " + cls;
+            })
+            .attr("x", function(d) { return x(d.date); })
+            .attr("width", widthFunc)
+            .on("mouseover", function(d, i) {
+               tooltip.transition()
+                  .duration(100)
+                  .style("opacity", .8);
+               tooltipText
+                  .html("<b>" + monthsUC[d.month] + " " + d.year + "</b><br>" +
+                     toCurrency(valueFunc(d)) + "<br>");
+               tooltip
+                  .style("left", (x(d.date) + widthFunc(d, i) / 2 + margin.left - 23) + "px")
+                  .style("top", (y(valueFunc(d)) - 30) + "px");
+               if (inflated)
+                  // Also highlight the same month on the inverse inflation graph
+                  $("#inv-" + keyYM(d.year, d.month)).addClass("hover");
+            })
+            .on("mouseout", function(d) {
+               tooltip.transition()
+                  .duration(100)
+                  .style("opacity", 0);
+               if (inflated)
+                  // Remove highlight from the same month on the inverse inflation graph
+                  $("#inv-" + keyYM(d.year, d.month)).removeClass("hover");
+            })
+         // New and existing bars: update
+         .merge(bars)
+            .attr("y", function(d) { return y(valueFunc(d)); })
+            .attr("height", function(d) { return Math.max(0, height - y(valueFunc(d))); })
+   };
+
+   makeBars(inflated ? "inflated" : "principal", valueFunc, inflated);
+   if (inflated) {
+      // Overlay another bar graph with the original, un-inflated loan
+      makeBars("principal", function(d) { return d.amt; }, false);
+   }
 
 }
 

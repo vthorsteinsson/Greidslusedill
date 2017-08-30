@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="Jafngreiðslulán útskýrt og sett fram myndrænt">
+<meta name="description" content="Verðtryggt jafngreiðslulán útskýrt og sett fram myndrænt">
 <meta name="application-name" content="Lánið mitt">
 
 <!-- Apple iPhone and iPad touch icons -->
@@ -133,11 +133,11 @@
       fill: skyblue;
    }
 
-   #results-inflated .bar.principal {
+   .bar.inflated {
       fill: mediumorchid;
    }
 
-   #results-inflated .bar.principal.past {
+   .bar.inflated.past {
       fill: plum;
    }
 
@@ -175,22 +175,32 @@
 
    .bar:hover {
       fill: orange;
+      stroke: orange;
+      stroke-width: 1px;
    }
 
    .bar.principal:hover { /* !!! TODO: find out why this is necessary */
       fill: orange;
+      stroke: orange;
+      stroke-width: 1px;
    }
 
-   #results-inflated .bar.principal:hover {
+   .bar.inflated:hover {
       fill: orange;
+      stroke: orange;
+      stroke-width: 1px;
    }
 
    .bar.amort:hover {
       fill: orange;
+      stroke: orange;
+      stroke-width: 1px;
    }
 
    .bar.interest:hover {
       fill: orange;
+      stroke: orange;
+      stroke-width: 1px;
    }
 
    .y.axis text {
@@ -249,6 +259,15 @@
       text-align: center;
    }
 
+   #results-inflated div.form-group {
+      margin-top: 0;
+      padding-top: 0;
+   }
+
+   #results-inflated label.control-label {
+      margin-top: 0;
+   }
+
 </style>
 
 </head>
@@ -260,7 +279,7 @@
       <div class="row">
          <div class="col-xs-12 col-sm-7" id="header">
             <h2>Lánið mitt</h2>
-            <h3>Verðtryggð jafngreiðslulán<br>sett fram myndrænt</h3>
+            <h3>Verðtryggt jafngreiðslulán<br>sett fram myndrænt</h3>
          </div>
          <div class="col-xs-12 col-sm-5">
             <h3 align="right"><small>eftir Vilhjálm Þorsteinsson</small><br>
@@ -387,8 +406,8 @@
                      tíma, <b>á upphaflegu verðlagi þess</b>, hægt fyrst en svo hraðar í lokin.
                      Farðu með músina yfir grafið til að sjá upphæðina í byrjun
                      hvers mánaðar.</p>
-                     <p class="small">Litaskilin eru við daginn í dag,
-                     þ.e milli fortíðar og framtíðar.</p>
+                     <p class="small">Lóðréttu skilin milli ljósari og dekkri litar eru við daginn í dag,
+                     þ.e. milli fortíðar og framtíðar.</p>
                   </div>
                   <div class="col-sm-12" id="canvas-principal">
                      <!-- SVG stuff is inserted here -->
@@ -413,7 +432,7 @@
                         eða <b><span id="result-monthly-interest"></span>%</b> mánaðarlega vexti.</li>
 
                         <li>Vísitala neysluverðs var <b><span id="result-basevnv"></span></b> þegar lánið var tekið, en hún er núna <b><span id="result-vnv-now"></span></b>.
-                        Það samsvarar <b><span id="result-inflation"></span>%</b> árlegri
+                        Það samsvarar <b><span class="result-inflation"></span>%</b> árlegri
                         meðalverðbólgu (rýrnun krónunnar).</li>
 
                         <li>Á upphaflegu verðlagi var höfuðstóll lánsins
@@ -483,9 +502,8 @@
                      <p>Hér sjást afborganir og vextir jafngreiðslulánsins, <b>á upphaflegu verðlagi
                      þess</b>. Jafngreiðslan er <b><span class="result-pmt"></span>
                      krónur á mánuði</b>, og skiptist í afborgun og vexti eins og hér sést.
-                     Farðu með músina yfir
-                     grafið til að sjá upphæðir hvers mánaðar.</p>
-                     <p class="small">Litaskilin eru við daginn í dag,
+                     Farðu með músina yfir grafið til að sjá upphæðir hvers mánaðar.</p>
+                     <p class="small">Lóðréttu skilin milli ljósari og dekkri litar eru við daginn í dag,
                      þ.e. milli fortíðar og framtíðar.</p>
                   </div>
                   <div class="col-sm-12" id="canvas-payments">
@@ -509,8 +527,9 @@
                      krónunnar mikið að segja um stöðu þess hverju sinni og greiðslur af því
                      í framtíðinni.</p>
                      <p>Hér sést hvernig íslenska krónan hefur rýrnað vegna verðbólgu
-                     síðan lánið var tekið.
-                     <b>Kaupmáttur 1.000 króna</b> er sýndur á hverjum tíma,
+                     síðan lánið var tekið, en rýrnunin nemur að meðaltali
+                     <b><span class="result-inflation"></span>%</b> á ári.</p>
+                     <p><b>Kaupmáttur 1.000 króna</b> er sýndur á hverjum tíma,
                      í hlutfalli við kaupmátt 1.000 króna eins og hann var
                      í upphafi lánstímans. Miðað er við vísitölu neysluverðs.</p>
                   </div>
@@ -547,12 +566,25 @@
                      Með öðrum orðum: Hver upphaflegur þúsundkall kostar meira,
                      sbr. næsta graf á undan.</p>
                      <p>Hér eru eftirstöðvar lánsins sýndar eins og þær voru í rýrnandi krónum
-                     hverju sinni, að teknu tilliti til verðbólgu til dagsins í dag.
-                     <b>Frá deginum í dag er lánið sýnt án verðbólgu.</b>
-                     Farðu með músina yfir grafið til að sjá uppreiknaðar
+                     hverju sinni, að teknu tilliti til verðbólgu til dagsins í dag. Upphaflega
+                     lánið er jafnframt sýnt í bláum lit.
+                     <b id="inflation-premise">Frá deginum í dag er lánið sýnt án verðbólgu.</b>
+                     Farðu með músina yfir fjólubláa hlutann til að sjá uppreiknaðar
                      (verðbættar) eftirstöðvar í byrjun hvers mánaðar.</p>
-                     <p class="small">Litaskilin eru við daginn í dag, þ.e. milli fortíðar
-                     og framtíðar.</p>
+                     <div class="row">
+                        <div class="col-xs-12 col-sm-5">
+                        <p class="small">Lóðréttu skilin milli ljósari og dekkri litar eru við
+                        daginn í dag, þ.e. milli fortíðar og framtíðar.</p>
+                        </div>
+                        <div class="col-xs-12 col-sm-7">
+                        <div class="form-group pull-right">
+                           <label for="inflation-future" class="control-label">Verðbólga til framtíðar</label>
+                           <select class="form-control" id="inflation-future">
+                              <!-- Options will be inserted here -->
+                           </select>
+                        </div>
+                        </div>
+                     </div>
                   </div>
                   <div class="col-sm-12" id="canvas-inflated">
                      <!-- SVG stuff is inserted here -->
@@ -577,7 +609,7 @@
                      á mánuði, er <b><span class="result-pmt-now"></span></b> kr. á verðlagi
                      dagsins.
                      Farðu með músina yfir grafið til að sjá upphæðir hvers mánaðar.</p>
-                     <p class="small">Litaskilin eru við daginn í dag,
+                     <p class="small">Lóðréttu skilin milli ljósari og dekkri litar eru við daginn í dag,
                      þ.e. milli fortíðar og framtíðar.</p>
                   </div>
                   <div class="col-sm-12" id="canvas-payments-inflated">
@@ -624,6 +656,26 @@
             field.removeClass("has-error");
             $("span.form-control-feedback", field)
                .html("");
+         }
+      }
+
+      function setInflationOptions(id, inflSoFar) {
+         // Initialize the inflation future premises
+         var ctrl = $(id);
+         var opt = [
+            [0.0, "Engin; nota verðlag dagsins í dag (0,00%)"],
+            [2.5, "Verðbólgumarkmið Seðlabankans (2,50%)"],
+            [4.0, "Efri mörk verðbólgumarkmiðs Seðlabankans (4,00%)"],
+            [inflSoFar, "Sú sama og á lánstímanum til þessa (" + toFixed(inflSoFar,2) + "%)"]
+         ];
+         ctrl.html("");
+         for (var j = 0; j < opt.length; j++) {
+            var o = opt[j];
+            ctrl.append(
+               $("<option>")
+                  .attr("value", o[0].toString())
+                  .text(o[1])
+            );
          }
       }
 
@@ -705,27 +757,25 @@
             function(e) {
                var $this = $(this);
                if (!$this.hasClass('panel-collapsed')) {
+                  // Collapse the panel
                   $this.parents('.panel').find('.panel-body').slideUp();
-                  $this.addClass('panel-collapsed');
-                  $this.find('span i').removeClass('glyphicon-chevron-up').addClass('glyphicon-chevron-down');
+                  $this
+                     .addClass('panel-collapsed')
+                     .find('span i')
+                        .removeClass('glyphicon-chevron-up')
+                        .addClass('glyphicon-chevron-down');
                }
                else {
+                  // Open the panel
                   $this.parents('.panel').find('.panel-body').slideDown();
-                  $this.removeClass('panel-collapsed');
-                  $this.find('span i').removeClass('glyphicon-chevron-down').addClass('glyphicon-chevron-up');
+                  $this
+                     .removeClass('panel-collapsed')
+                     .find('span i')
+                        .removeClass('glyphicon-chevron-down')
+                        .addClass('glyphicon-chevron-up');
                }
             }
          );
-         // The results-payments panel is by default closed
-         $("#results-payments .panel-heading.clickable")
-            .parents(".panel")
-            .find(".panel-body")
-            .css("display", "none");
-         // The results-about panel is by default closed
-         $("#results-about .panel-heading.clickable")
-            .parents(".panel")
-            .find(".panel-body")
-            .css("display", "none");
          // Initialize the list of years
          var yearControl = $("#taken-year");
          for (var year = 1988; year <= 2017; year++) {
@@ -736,6 +786,7 @@
                opt.attr("selected", "");
             yearControl.append(opt);
          }
+
          // Add explanation
          $("#explain-wrong").attr("title",
             "ÍLS og bankarnir gefa vexti upp sem 12 * mánaðarvexti.\n" +
@@ -789,6 +840,13 @@
          $("#taken-month").change(function(e) { update(); });
          // Display the initial data, if everything validates OK
          update();
+         // Make sure that collapsible planels that are by default closed
+         // are initially hidden (this should be done after update()
+         // since the panel widths are not available if display is none)
+         $(".clickable.panel-collapsed")
+            .parents(".panel")
+            .find(".panel-body")
+            .css("display", "none");
       }
 
       $(document).ready(init);
