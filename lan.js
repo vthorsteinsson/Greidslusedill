@@ -364,6 +364,7 @@ var monthsUC = months.map(function(m) { return m.charAt(0).toUpperCase() + m.sli
 var now = new Date();
 var yearNow = now.getFullYear();
 var monthNow = now.getMonth(); // 0-based
+var vnvNow = vis[keyYM(yearNow, monthNow)].vnv;
 // Accepted currency formats:
 // 18000000
 // 18.000.000
@@ -449,84 +450,110 @@ function keyYM (year, month) {
    return year.toFixed(0) + "-" + (month + 101).toString().substr(-2, 2);
 }
 
-function lookupVNV(year, month, offset) {
+function lookupVNV(year, month, offset, futureInflation) {
    // Return the inflation index for the given year and month (0-based)
    // First, apply the offset
+   var now = yearNow * 12 + monthNow;
    var i = year * 12 + month + (offset || 0);
    year = Math.floor(i / 12);
    month = i % 12;
-   if (year < yearNow || (year == yearNow && month < monthNow))
-      // Past VNV: look it up in the table
+   if (i <= now)
+      // Past or present VNV: look it up in the table
       return vis[keyYM(year, month)].vnv;
-   // Present or future VNV: use the current (newest) VNV
-   return vis[keyYM(yearNow, monthNow)].vnv;
+   // Future VNV: use the current (newest) VNV plus future inflation
+   var f = (futureInflation || 0.0) / 100;
+   return vnvNow * Math.pow(1 + f, (i - now) / 12);
 }
 
-function calcLoan(amount, interest, n, wrong, year, month) {
-   // Calculate and display the loan information.
+function setInflationOptions(id, inflSoFar) {
+   // Initialize the inflation future premises
+   // 10 year inflation
+   var infl10year = Math.pow(vnvNow / lookupVNV(yearNow, monthNow, - 10 * 12), 12 / (10 * 12));
+   // 12 month inflation
+   var infl12month = vnvNow / lookupVNV(yearNow, monthNow, -12);
+   // Convert from (1 + p) to percentage
+   infl10year = (infl10year - 1) * 100;
+   infl12month = (infl12month - 1) * 100;
+   var opt = [
+      [0.0, "Engin; nota verðlag dagsins í dag (0,00%)"],
+      [2.5, "Verðbólgumarkmið Seðlabankans (2,50%)"],
+      [4.0, "Efri mörk verðbólgumarkmiðs Seðlabankans (4,00%)"],
+      [infl10year, "Meðalverðbólga sl. 10 ár (" + toFixed(infl10year, 2) + "%)"],
+      [infl12month, "Meðalverðbólga sl. 12 mánuði (" + toFixed(infl12month, 2) + "%)"],
+      [inflSoFar, "Sú sama og á lánstímanum til þessa (" + toFixed(inflSoFar, 2) + "%)"]
+   ];
+   // Sort the options in increasing order by percentage
+   opt.sort(function(a, b) {
+      if (a[0] < b[0])
+         return -1;
+      if (a[0] > b[0])
+         return 1;
+      return 0;
+   });
+   var ctrl = $(id);
+   ctrl.html("");
+   for (var j = 0; j < opt.length; j++) {
+      var o = opt[j];
+      ctrl.append(
+         $("<option>")
+            .attr("value", o[0].toString())
+            .text(o[1])
+      );
+   }
+}
+
+function calcLoan(amount, interest, n, wrong, year, month, futureInflation) {
+   // Calculate the loan information and return it in a context object.
    // amount is the original loan amount in ISK.
    // interest is the quoted (purportedly) annual interest rate in percent.
    // n is the number of payments, for instance 480 for 40 years.
    // wrong is true if the monthly interest should be calculated as r/12.
    // year and month is the initial date of the loan. The month is 1-based.
+   // futureInflation is the assumed future annual inflation rate, in percent.
 
-   // Use the inflation index (VNV) of the previous month
-   var baseVNV = lookupVNV(year, month - 1, -1) || 100.0;
-   var nowVNV = lookupVNV(yearNow, monthNow);
-   var monthlyInterest;
-   var effectiveInterest;
+   // The context being created
+   var ctx = {
+      amount : amount,
+      interest : interest,
+      n : n,
+      wrong : wrong,
+      year : year,
+      month : month - 1,
+      // Use the inflation index (VNV) of the previous month
+      baseVNV : lookupVNV(year, month - 1, -1) || 100.0,
+      futureInflation : futureInflation || 0.0
+   };
+
    if (wrong) {
       // The Icelandic banks quote annual interest wrongly,
       // i.e. they use the percentage / 12 as a monthly
       // accrual rate, not the percentage ^ (1/12)
-      monthlyInterest = interest / 12;
-      effectiveInterest = (Math.pow(1 + monthlyInterest / 100, 12) - 1) * 100;
+      ctx.monthlyInterest = interest / 12;
+      ctx.effectiveInterest = (Math.pow(1 + ctx.monthlyInterest / 100, 12) - 1) * 100;
    }
    else {
-      monthlyInterest = (Math.pow(1 + interest / 100, 1 / 12) - 1) * 100;
-      effectiveInterest = interest;
+      ctx.monthlyInterest = (Math.pow(1 + interest / 100, 1 / 12) - 1) * 100;
+      ctx.effectiveInterest = interest;
    }
-   var r = monthlyInterest / 100;
+   var r = ctx.monthlyInterest / 100;
    // The running principal amount
    var G = amount;
    // Annuity payment
-   var y = annuity(amount, n, 12, interest, !wrong);
+   ctx.payment = annuity(amount, n, 12, interest, !wrong);
    // Fill in informational fields
-   $(".result-interest").text(toFixed(effectiveInterest, 4));
-   $("#result-monthly-interest").text(toFixed(monthlyInterest, 4));
-   $("#result-basevnv").text(toFixed(baseVNV, 1));
-   $("#result-vnv-now").text(toFixed(nowVNV, 1));
-   var months = (yearNow - year) * 12 + monthNow - (month - 1) + 1;
-   var monthlyInflation = months > 0 ? Math.pow(nowVNV / baseVNV, (1 / months)) : 1.0;
-   var annualInflation = (Math.pow(monthlyInflation, 12) - 1) * 100;
-   $(".result-inflation").text(toFixed(annualInflation, 2));
-   $(".result-pmt").text(toCurrency(y));
-   $(".result-pmt-now").text(toCurrency(y * nowVNV / baseVNV));
-   // Show principal
-   $("#result-principal").text(toCurrency(amount));
-   var principalNow = amount * nowVNV / baseVNV;
-   $("#result-principal-now").text(toCurrency(principalNow));
-   // Show total amount repaid
-   $("#result-total").text(toCurrency(y * n));
-   var totalNow = y * n * nowVNV / baseVNV;
-   $("#result-total-now").text(toCurrency(totalNow));
-   // Display cost of using wrong (r/12) monthly interest?
-   $("li#wrong-cost").css("display", wrong ? "list-item" : "none");
-   $("#result-interest-nominal").text(toFixed(interest, 2));
-   var yCorrect = annuity(amount, n, 12, interest, true);
-   var totalCorrect = yCorrect * n * nowVNV / baseVNV;
-   $("#result-total-correct").text(toCurrency(totalCorrect));
-   $("#result-total-diff").text(toCurrency(totalNow - totalCorrect));
+   ctx.months = (yearNow - year) * 12 + monthNow - (month - 1) + 1;
+   ctx.monthlyInflation = ctx.months > 0 ? Math.pow(vnvNow / ctx.baseVNV, (1 / ctx.months)) : 1.0;
+   ctx.annualInflation = (Math.pow(ctx.monthlyInflation, 12) - 1) * 100;
    // Generate all payments as well as a final sentinel state
    // with amt == newAmt == 0
    var a = [];
    for (var i = 0; i <= n; i++) {
       var vx = G * r;
-      var nG = (i == n) ? G : G + vx - y;
+      var nG = (i == n) ? G : G + vx - ctx.payment;
       var thisMonth = month - 1 + i;
       var thisYear = year + Math.floor(thisMonth / 12);
       thisMonth %= 12;
-      var vnv = lookupVNV(thisYear, thisMonth) || 100.0;
+      var vnv = lookupVNV(thisYear, thisMonth, 0, ctx.futureInflation) || 100.0;
       a.push(
          {
             ix : i + 1,
@@ -534,36 +561,57 @@ function calcLoan(amount, interest, n, wrong, year, month) {
             month : thisMonth,
             date : new Date(thisYear, thisMonth), // Month is 0-based
             amt : G,
-            amtInflated : G * vnv / baseVNV,
+            amtInflated : G * vnv / ctx.baseVNV,
             vx : vx,
             newAmt : nG,
             vnv : vnv,
-            vnvRel : baseVNV / vnv
+            vnvRel : ctx.baseVNV / vnv
          }
       );
       // Update running principal
       G = nG;
    }
-   // Create a context object with loan information
-   var ctx = {
-      year : year,
-      month : month - 1,
-      baseVNV : baseVNV,
-      payment : y,
-      a : a,
-      annualInflation : annualInflation
-   };
+   ctx.a = a;
+   return ctx;
+}
+
+function displayLoan(ctx) {
+   // Fill in informational fields
+   $(".result-interest").text(toFixed(ctx.effectiveInterest, 4));
+   $("#result-monthly-interest").text(toFixed(ctx.monthlyInterest, 4));
+   $("#result-basevnv").text(toFixed(ctx.baseVNV, 1));
+   $("#result-vnv-now").text(toFixed(vnvNow, 1));
+   $(".result-inflation").text(toFixed(ctx.annualInflation, 2));
+   $(".result-pmt").text(toCurrency(ctx.payment));
+   $(".result-pmt-now").text(toCurrency(ctx.payment * vnvNow / ctx.baseVNV));
+   // Show principal
+   $("#result-principal").text(toCurrency(ctx.amount));
+   var principalNow = ctx.amount * vnvNow / ctx.baseVNV;
+   $("#result-principal-now").text(toCurrency(principalNow));
+   // Show total amount repaid
+   $("#result-total").text(toCurrency(ctx.payment * ctx.n));
+   var totalNow = ctx.payment * ctx.n * vnvNow / ctx.baseVNV;
+   $("#result-total-now").text(toCurrency(totalNow));
+   // Display cost of using wrong (r/12) monthly interest?
+   $("li#wrong-cost").css("display", ctx.wrong ? "list-item" : "none");
+   $("#result-interest-nominal").text(toFixed(ctx.interest, 2));
+   var yCorrect = annuity(ctx.amount, ctx.n, 12, ctx.interest, true);
+   var totalCorrect = yCorrect * ctx.n * vnvNow / ctx.baseVNV;
+   $("#result-total-correct").text(toCurrency(totalCorrect));
+   $("#result-total-diff").text(toCurrency(totalNow - totalCorrect));
    // The divs must have display: block for width calculations to work
    $("div.result").css("visibility", "hidden").css("display", "block");
-   displayPayments(y, a.slice(0, -1)); // Display all except final sentinel
+   displayPayments(ctx);
    displayGraphs(ctx);
    // Everything is ready: show it
    $("div.result").css("visibility", "visible");
 }
 
-function displayPayments(y, a) {
+function displayPayments(ctx) {
    // Display a tabular payment schedule
    // with an expansion button in the middle
+   var y = ctx.payment;
+   var a = ctx.a.slice(0, -1); // Display all except final sentinel
    $payments = $("#payments");
    $payments.html("");
    var len = a.length;
@@ -637,7 +685,7 @@ function displayPrincipalGraph(ctx, inflated) {
    var canvasId = inflated ? "#canvas-inflated" : "#canvas-principal";
    // Determine the drawing surface
    $canvas = $(canvasId);
-   var HEIGHT = 300;
+   var HEIGHT = inflated ? 350 : 300;
    var margin = { top: 30, right: 20, bottom: 20, left: 50 },
       width = $canvas.width() - margin.right - margin.left,
       height = HEIGHT - margin.top - margin.bottom;
@@ -774,6 +822,12 @@ function displayPrincipalGraph(ctx, inflated) {
    if (inflated) {
       // Overlay another bar graph with the original, un-inflated loan
       makeBars("principal", function(d) { return d.amt; }, false);
+      // Modify the inflation premise text
+      if (ctx.futureInflation == 0.0)
+         $("span.inflation-premise").text("Frá deginum í dag er lánið sýnt án verðbólgu.")
+      else
+         $("span.inflation-premise").text("Frá deginum í dag er reiknað með " +
+            toFixed(ctx.futureInflation, 2) + "% árlegri verðbólgu.");
    }
 
 }
@@ -786,7 +840,7 @@ function displayPaymentGraph(ctx, inflated) {
 
    // Determine the drawing surface
    $canvas = $(canvasId);
-   var HEIGHT = 300;
+   var HEIGHT = inflated ? 350 : 300;
    var margin = { top: 30, right: 20, bottom: 20, left: 50 },
       width = $canvas.width() - margin.right - margin.left,
       height = HEIGHT - margin.top - margin.bottom;

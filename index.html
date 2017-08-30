@@ -568,7 +568,8 @@
                      <p>Hér eru eftirstöðvar lánsins sýndar eins og þær voru í rýrnandi krónum
                      hverju sinni, að teknu tilliti til verðbólgu til dagsins í dag. Upphaflega
                      lánið er jafnframt sýnt í bláum lit.
-                     <b id="inflation-premise">Frá deginum í dag er lánið sýnt án verðbólgu.</b>
+                     <b><span class="inflation-premise">Frá deginum í dag er lánið sýnt
+                     án verðbólgu.</span></b>
                      Farðu með músina yfir fjólubláa hlutann til að sjá uppreiknaðar
                      (verðbættar) eftirstöðvar í byrjun hvers mánaðar.</p>
                      <div class="row">
@@ -604,7 +605,8 @@
                <div class="panel-body">
                   <div class="col-sm-12">
                      <p>Hér sjást afborganir og vextir jafngreiðslulánsins, <b>í rýrnandi
-                     krónum hverju sinni</b>. Frá deginum í dag er lánið sýnt án verðbólgu.
+                     krónum hverju sinni</b>.
+                     <span class="inflation-premise">Frá deginum í dag er lánið sýnt án verðbólgu.</span>
                      Jafngreiðslan, sem upphaflega var <b><span class="result-pmt"></span></b> kr.
                      á mánuði, er <b><span class="result-pmt-now"></span></b> kr. á verðlagi
                      dagsins.
@@ -659,26 +661,6 @@
          }
       }
 
-      function setInflationOptions(id, inflSoFar) {
-         // Initialize the inflation future premises
-         var ctrl = $(id);
-         var opt = [
-            [0.0, "Engin; nota verðlag dagsins í dag (0,00%)"],
-            [2.5, "Verðbólgumarkmið Seðlabankans (2,50%)"],
-            [4.0, "Efri mörk verðbólgumarkmiðs Seðlabankans (4,00%)"],
-            [inflSoFar, "Sú sama og á lánstímanum til þessa (" + toFixed(inflSoFar,2) + "%)"]
-         ];
-         ctrl.html("");
-         for (var j = 0; j < opt.length; j++) {
-            var o = opt[j];
-            ctrl.append(
-               $("<option>")
-                  .attr("value", o[0].toString())
-                  .text(o[1])
-            );
-         }
-      }
-
       function validateAmount() {
          // Returns the amount entered or NaN if not valid
          var amt = asCurrency($.trim($("#amount").val()));
@@ -706,7 +688,7 @@
          return i;
       }
 
-      function checkAndUpdate() {
+      function checkAndUpdate(inflatedOnly) {
          // Validate the current input and calculate the loan if OK
          var amt = validateAmount();
          if (isNaN(amt))
@@ -721,16 +703,26 @@
          var wrong = $("#wrong").is(":checked");
          var year = parseInt($("#taken-year").val());
          var month = parseInt($("#taken-month").val());
+         var futureInflation = parseFloat($("#inflation-future").val());
          // Encode the parameters in the hash part of the URL
          location.hash = [amt, interest, num, wrong, year,
-            ("0" + month).slice(-2,2)].join("+");
-         calcLoan(amt, interest, num, wrong, year, month);
+            ("0" + month).slice(-2,2), futureInflation].join("+");
+         var ctx = calcLoan(amt, interest, num, wrong,
+            year, month, futureInflation);
+         if (inflatedOnly) {
+            // Only update the inflation-based graphs
+            displayPrincipalGraph(ctx, true);
+            displayPaymentGraph(ctx, true);
+         }
+         else
+            // Update everything
+            displayLoan(ctx);
       }
 
       function submit() {
          // Validate input fields; if error, focus on the error field.
          // Otherwise, update the displayed data.
-         var errField = checkAndUpdate();
+         var errField = checkAndUpdate(false);
          if (errField !== undefined) {
             $(errField).focus();
          }
@@ -738,7 +730,7 @@
 
       function update() {
          // Update the current view, if everything validates OK
-         checkAndUpdate();
+         checkAndUpdate(false);
       }
 
       function init() {
@@ -806,6 +798,8 @@
                $("#taken-year").val(p[4]);
             if (p[5] !== undefined)
                $("#taken-month").val(p[5]);
+            if (p[6] !== undefined)
+               $("#inflation-future").val(p[6]);
          }
          // Add amount validation and formatting
          $("#amount").blur(function(e) {
@@ -838,6 +832,11 @@
          $("#taken-year").change(function(e) { update(); });
          // Month
          $("#taken-month").change(function(e) { update(); });
+         // Future inflation assumption
+         $("#inflation-future").change(function(e) {
+            // Update inflation graphs only
+            checkAndUpdate(true);
+         });
          // Display the initial data, if everything validates OK
          update();
          // Make sure that collapsible planels that are by default closed
