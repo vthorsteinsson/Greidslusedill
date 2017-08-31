@@ -8,6 +8,13 @@
 <meta name="description" content="Verðtryggt jafngreiðslulán útskýrt og sett fram myndrænt">
 <meta name="application-name" content="Lánið mitt">
 
+<!--
+   Copyright (C) 2017 Miðeind ehf. / Vilhjálmur Þorsteinsson
+
+   See the LICENSE file at https://github.com/vthorsteinsson/Greidslusedill
+   for licensing information.
+-->
+
 <!-- Apple iPhone and iPad touch icons -->
 <!--
 <link rel="apple-touch-icon" sizes="120x120" href="/touch-icon-iphone-retina.png">
@@ -377,7 +384,7 @@
                   <div class="col-xs-12">
                      <div class="pull-right">
                         <button type="submit" id="submit" class="btn btn-primary">
-                           <span class="glyphicon glyphicon-play"></span>&nbsp;&nbsp;Sýna myndrænt
+                           <span class="glyphicon glyphicon-play"></span>&nbsp;&nbsp;Uppfæra
                         </button>
                      </div>
                   </div>
@@ -643,6 +650,8 @@
    <script src="lan.js"></script>
 
    <script>
+
+      "use strict";
 
       function showStatus(id, err) {
          // Show the validation status of a field depending on

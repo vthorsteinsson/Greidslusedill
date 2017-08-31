@@ -1,3 +1,17 @@
+/*
+
+   lan.js
+
+   Functions used by the index.html page of
+   the website LániðMitt.is
+
+   Copyright (C) 2017 by Miðeind ehf. / Vilhjálmur Þorsteinsson
+   See the LICENSE file at https://github.com/vthorsteinsson/Greidslusedill
+   for licensing information.
+
+*/
+
+"use strict";
 
 // Vísitölur húsnæðisverðs og neysluverðs
 var vis = {
@@ -612,7 +626,7 @@ function displayPayments(ctx) {
    // with an expansion button in the middle
    var y = ctx.payment;
    var a = ctx.a.slice(0, -1); // Display all except final sentinel
-   $payments = $("#payments");
+   var $payments = $("#payments");
    $payments.html("");
    var len = a.length;
    var middleBar = false;
@@ -684,8 +698,8 @@ function displayPrincipalGraph(ctx, inflated) {
 
    var canvasId = inflated ? "#canvas-inflated" : "#canvas-principal";
    // Determine the drawing surface
-   $canvas = $(canvasId);
-   var HEIGHT = inflated ? 350 : 300;
+   var $canvas = $(canvasId);
+   var HEIGHT = inflated ? 320 : 300;
    var margin = { top: 30, right: 20, bottom: 20, left: 50 },
       width = $canvas.width() - margin.right - margin.left,
       height = HEIGHT - margin.top - margin.bottom;
@@ -839,8 +853,8 @@ function displayPaymentGraph(ctx, inflated) {
    var canvasId = inflated ? "#canvas-payments-inflated" : "#canvas-payments";
 
    // Determine the drawing surface
-   $canvas = $(canvasId);
-   var HEIGHT = inflated ? 350 : 300;
+   var $canvas = $(canvasId);
+   var HEIGHT = inflated ? 320 : 300;
    var margin = { top: 30, right: 20, bottom: 20, left: 50 },
       width = $canvas.width() - margin.right - margin.left,
       height = HEIGHT - margin.top - margin.bottom;
@@ -1031,7 +1045,7 @@ function displayInflationGraph(ctx, inverse) {
    var canvasId = inverse ? "#canvas-inverse" : "#canvas-inflation";
    var barId = inverse ? "inv" : "infl";
    // Determine the drawing surface
-   $canvas = $(canvasId);
+   var $canvas = $(canvasId);
    var HEIGHT = 250;
    var margin = { top: 30, right: 20, bottom: 20, left: 50 },
       width = $canvas.width() - margin.right - margin.left,
