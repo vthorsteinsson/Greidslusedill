@@ -178,6 +178,8 @@
 
    .bar.hover {
       fill: orange;
+      stroke: orange;
+      stroke-width: 1px;
    }
 
    .bar:hover {
@@ -653,6 +655,8 @@
 
       "use strict";
 
+      var narrowUI = false;
+
       function showStatus(id, err) {
          // Show the validation status of a field depending on
          // whether num is a valid number or not
@@ -740,6 +744,25 @@
       function update() {
          // Update the current view, if everything validates OK
          checkAndUpdate(false);
+      }
+
+      function mediaMinWidth768(mql) {
+         if (mql.matches) {
+            // Take action when min-width exceeds 768
+            narrowUI = false;
+         }
+         else {
+            narrowUI = true;
+         }
+      }
+
+      function initMediaListener() {
+         // Install listener functions for media changes
+         var mql = window.matchMedia("(min-width: 768px)");
+         if (mql) {
+            mediaMinWidth768(mql);
+            mql.addListener(mediaMinWidth768);
+         }
       }
 
       function init() {
@@ -846,6 +869,8 @@
             // Update inflation graphs only
             checkAndUpdate(true);
          });
+         // Start listening for media changes
+         initMediaListener();
          // Display the initial data, if everything validates OK
          update();
          // Make sure that collapsible planels that are by default closed

@@ -366,7 +366,6 @@ var vis = {
 "2017-05" : { vh:574.6,vnv:443.0 },
 "2017-06" : { vh:576.0,vnv:443.0 },
 "2017-07" : { vh:576.0,vnv:442.9 }, // !!! TODO: update vh
-"2017-08" : { vh:576.0,vnv:442.9 }, // !!! Must end with current month
 };
 
 var months = [
@@ -378,7 +377,17 @@ var monthsUC = months.map(function(m) { return m.charAt(0).toUpperCase() + m.sli
 var now = new Date();
 var yearNow = now.getFullYear();
 var monthNow = now.getMonth(); // 0-based
-var vnvNow = vis[keyYM(yearNow, monthNow)].vnv;
+
+// The last year and month for which index data is available
+var keyLast;
+for (var key in vis)
+   if (keyLast === undefined || key > keyLast)
+      keyLast = key;
+var yearLast = parseInt(keyLast.slice(0, 4));
+var monthLast = parseInt(keyLast.slice(-2)) - 1;
+var vnvLast = vis[keyLast].vnv;
+
+// Input validation
 // Accepted currency formats:
 // 18000000
 // 18.000.000
@@ -467,24 +476,24 @@ function keyYM (year, month) {
 function lookupVNV(year, month, offset, futureInflation) {
    // Return the inflation index for the given year and month (0-based)
    // First, apply the offset
-   var now = yearNow * 12 + monthNow;
+   var last = yearLast * 12 + monthLast;
    var i = year * 12 + month + (offset || 0);
    year = Math.floor(i / 12);
    month = i % 12;
-   if (i <= now)
-      // Past or present VNV: look it up in the table
+   if (i <= last)
+      // Past VNV: look it up in the table
       return vis[keyYM(year, month)].vnv;
-   // Future VNV: use the current (newest) VNV plus future inflation
+   // Future VNV: use the last available VNV plus future inflation
    var f = (futureInflation || 0.0) / 100;
-   return vnvNow * Math.pow(1 + f, (i - now) / 12);
+   return vnvLast * Math.pow(1 + f, (i - last) / 12);
 }
 
 function setInflationOptions(id, inflSoFar) {
    // Initialize the inflation future premises
    // 10 year inflation
-   var infl10year = Math.pow(vnvNow / lookupVNV(yearNow, monthNow, - 10 * 12), 12 / (10 * 12));
+   var infl10year = Math.pow(vnvLast / lookupVNV(yearLast, monthLast, - 10 * 12), 12 / (10 * 12));
    // 12 month inflation
-   var infl12month = vnvNow / lookupVNV(yearNow, monthNow, -12);
+   var infl12month = vnvLast / lookupVNV(yearLast, monthLast, -12);
    // Convert from (1 + p) to percentage
    infl10year = (infl10year - 1) * 100;
    infl12month = (infl12month - 1) * 100;
@@ -555,8 +564,9 @@ function calcLoan(amount, interest, n, wrong, year, month, futureInflation) {
    // Annuity payment
    ctx.payment = annuity(amount, n, 12, interest, !wrong);
    // Fill in informational fields
-   ctx.months = (yearNow - year) * 12 + monthNow - (month - 1) + 1;
-   ctx.monthlyInflation = ctx.months > 0 ? Math.pow(vnvNow / ctx.baseVNV, (1 / ctx.months)) : 1.0;
+   ctx.months = (yearLast - year) * 12 + monthLast - (month - 1) + 1;
+   ctx.monthlyInflation = ctx.months > 0 ?
+      Math.pow(vnvLast / ctx.baseVNV, (1 / ctx.months)) : 1.0;
    ctx.annualInflation = (Math.pow(ctx.monthlyInflation, 12) - 1) * 100;
    // Generate all payments as well as a final sentinel state
    // with amt == newAmt == 0
@@ -594,23 +604,23 @@ function displayLoan(ctx) {
    $(".result-interest").text(toFixed(ctx.effectiveInterest, 4));
    $("#result-monthly-interest").text(toFixed(ctx.monthlyInterest, 4));
    $("#result-basevnv").text(toFixed(ctx.baseVNV, 1));
-   $("#result-vnv-now").text(toFixed(vnvNow, 1));
+   $("#result-vnv-now").text(toFixed(vnvLast, 1));
    $(".result-inflation").text(toFixed(ctx.annualInflation, 2));
    $(".result-pmt").text(toCurrency(ctx.payment));
-   $(".result-pmt-now").text(toCurrency(ctx.payment * vnvNow / ctx.baseVNV));
+   $(".result-pmt-now").text(toCurrency(ctx.payment * vnvLast / ctx.baseVNV));
    // Show principal
    $("#result-principal").text(toCurrency(ctx.amount));
-   var principalNow = ctx.amount * vnvNow / ctx.baseVNV;
+   var principalNow = ctx.amount * vnvLast / ctx.baseVNV;
    $("#result-principal-now").text(toCurrency(principalNow));
    // Show total amount repaid
    $("#result-total").text(toCurrency(ctx.payment * ctx.n));
-   var totalNow = ctx.payment * ctx.n * vnvNow / ctx.baseVNV;
+   var totalNow = ctx.payment * ctx.n * vnvLast / ctx.baseVNV;
    $("#result-total-now").text(toCurrency(totalNow));
    // Display cost of using wrong (r/12) monthly interest?
    $("li#wrong-cost").css("display", ctx.wrong ? "list-item" : "none");
    $("#result-interest-nominal").text(toFixed(ctx.interest, 2));
    var yCorrect = annuity(ctx.amount, ctx.n, 12, ctx.interest, true);
-   var totalCorrect = yCorrect * ctx.n * vnvNow / ctx.baseVNV;
+   var totalCorrect = yCorrect * ctx.n * vnvLast / ctx.baseVNV;
    $("#result-total-correct").text(toCurrency(totalCorrect));
    $("#result-total-diff").text(toCurrency(totalNow - totalCorrect));
    // The divs must have display: block for width calculations to work
@@ -787,7 +797,7 @@ function displayPrincipalGraph(ctx, inflated) {
       return Math.max(1, x(a[i+1].date) - x(a[i].date));
    };
 
-   var makeBars = function(cls, valueFunc, inflated) {
+   var makeBars = function(cls, barId, valueFunc, inflated) {
       // Draw bars representing the principal of the loan
       var bars = g.selectAll("rect.bar." + cls)
          .data(a, function(d) { return d.date.toISOString(); }); // Key function
@@ -804,6 +814,7 @@ function displayPrincipalGraph(ctx, inflated) {
             })
             .attr("x", function(d) { return x(d.date); })
             .attr("width", widthFunc)
+            .attr("id", function(d) { return barId + "-" + keyYM(d.year, d.month); })
             .on("mouseover", function(d, i) {
                tooltip.transition()
                   .duration(100)
@@ -814,17 +825,22 @@ function displayPrincipalGraph(ctx, inflated) {
                tooltip
                   .style("left", (x(d.date) + widthFunc(d, i) / 2 + margin.left - 23) + "px")
                   .style("top", (y(valueFunc(d)) - 30) + "px");
-               if (inflated)
+               if (inflated) {
                   // Also highlight the same month on the inverse inflation graph
                   $("#inv-" + keyYM(d.year, d.month)).addClass("hover");
+                  // ...and on the uninflated overlay graph
+                  $("#po-" + keyYM(d.year, d.month)).addClass("hover");
+               }
             })
             .on("mouseout", function(d) {
                tooltip.transition()
                   .duration(100)
                   .style("opacity", 0);
-               if (inflated)
+               if (inflated) {
                   // Remove highlight from the same month on the inverse inflation graph
                   $("#inv-" + keyYM(d.year, d.month)).removeClass("hover");
+                  $("#po-" + keyYM(d.year, d.month)).removeClass("hover");
+               }
             })
          // New and existing bars: update
          .merge(bars)
@@ -832,10 +848,12 @@ function displayPrincipalGraph(ctx, inflated) {
             .attr("height", function(d) { return Math.max(0, height - y(valueFunc(d))); })
    };
 
-   makeBars(inflated ? "inflated" : "principal", valueFunc, inflated);
+   makeBars(inflated ? "inflated" : "principal",
+      inflated ? "pi" : "p",
+      valueFunc, inflated);
    if (inflated) {
       // Overlay another bar graph with the original, un-inflated loan
-      makeBars("principal", function(d) { return d.amt; }, false);
+      makeBars("principal", "po", function(d) { return d.amt; }, false);
       // Modify the inflation premise text
       if (ctx.futureInflation == 0.0)
          $("span.inflation-premise").text("Frá deginum í dag er lánið sýnt án verðbólgu.")
@@ -1056,7 +1074,7 @@ function displayInflationGraph(ctx, inverse) {
    // Create the data array to be displayed
    var a = [];
    var start = ctx.year * 12 + ctx.month;
-   var end = yearNow * 12 + monthNow;
+   var end = yearLast * 12 + monthLast;
    for (var i = start; i <= end; i++) {
       var thisYear = Math.floor(i / 12);
       var thisMonth = i % 12;
