@@ -47,7 +47,7 @@
 <style>
 
    div.container {
-      max-width: 960px;
+      /* max-width: 960px; */
    }
 
    #header h2 {
@@ -58,8 +58,12 @@
    #header h3 {
       line-height: 1.25;
       margin-top: 0px;
-      padding-top: 0px;
-      padding-bottom: 18px;
+      padding-top: 6px;
+      padding-bottom: 6px;
+   }
+
+   #header img {
+      padding-top: 6px;
    }
 
    .clickable {
@@ -277,6 +281,42 @@
       margin-top: 0;
    }
 
+   div.results-container {
+   }
+
+   span.toggle {
+      margin-top: 12px;
+   }
+
+@media (min-width: 992px) {
+
+   /* Adapt to layout where the input form is to the left
+      and the results are displayed in a scrollable column
+      to the right. */
+
+   body {
+      overflow-y: hidden;
+   }
+
+   div.results-container {
+      height: 640px; /* Will be modified by setContainerHeight */
+      overflow-y: scroll;
+   }
+
+   .form-group {
+      margin-top: 12px;
+   }
+
+   div#numpmt-status {
+      margin-top: 12px;
+   }
+
+   .form-group label.control-label.nomargin {
+      margin-top: 0;
+   }
+
+}
+
 </style>
 
 </head>
@@ -284,354 +324,365 @@
 <body role="document">
 
    <div class="container" role="main">
-   
-      <div class="row">
-         <div class="col-xs-12 col-sm-7" id="header">
+
+      <div class="row" id="header">
+         <div class="col-xs-12 col-sm-7">
             <h2>Lánið mitt</h2>
             <h3>Verðtryggt jafngreiðslulán<br>sett fram myndrænt</h3>
          </div>
          <div class="col-xs-12 col-sm-5">
-            <h3 align="right"><small>eftir Vilhjálm Þorsteinsson</small><br>
-            <img src="assets/img/2325.jpg" width="80" height="97" class="img-rounded hidden-xs">
-            </h3>
+            <h3 align="right"><small>eftir
+            Vilhjálm Þorsteinsson</small><span class="hidden-xs"><br>
+            <img src="assets/img/2325.jpg" width="80" height="97"
+            class="img-rounded"></span></h3>
          </div>
       </div>
 
       <div class="row">
-         <div class="col-xs-12">
+
+         <div class="col-xs-12 col-md-3">
             <div class="panel panel-primary">
                <div class="panel-heading">
                   <h3 class="panel-title">Upplýsingar um lánið þitt</h3>
                </div>
                <div class="panel-body">
                   <div class="row">
-                  <div class="col-xs-12 col-sm-4">
-                     <div id="amount-status" class="form-group label-floating">
-                        <label for="amount" class="control-label">Upphafleg lánsfjárhæð</label>
-                        <div class="input-group">
-                           <div>
-                              <input type="text" name="amount" id="amount" maxlength=15
-                                 class="form-control" value="18.000.000">
-                              <span class="form-control-feedback pull-left"></span>
+                     <div class="col-xs-12 col-sm-4 col-md-12">
+                        <div id="amount-status" class="form-group label-floating">
+                           <label for="amount" class="control-label">Upphafleg lánsfjárhæð</label>
+                           <div class="input-group">
+                              <div>
+                                 <input type="text" name="amount" id="amount" maxlength=15
+                                    class="form-control" value="18.000.000">
+                                 <span class="form-control-feedback pull-left"></span>
+                              </div>
+                              <span class="input-group-addon">kr.</span>
                            </div>
-                           <span class="input-group-addon">kr.</span>
                         </div>
                      </div>
-                  </div>
                   </div>
                   <div class="row">
-                  <div class="col-xs-6 col-sm-3">
-                     <div class="form-group">
-                        <label for="taken-month" class="control-label">Lántökumánuður</label>
-                        <select class="form-control" id="taken-month">
-                           <option value="01">Janúar</option>
-                           <option value="02">Febrúar</option>
-                           <option value="03">Mars</option>
-                           <option value="04">Apríl</option>
-                           <option value="05">Maí</option>
-                           <option value="06">Júní</option>
-                           <option value="07" selected>Júlí</option>
-                           <option value="08">Ágúst</option>
-                           <option value="09">September</option>
-                           <option value="10">Október</option>
-                           <option value="11">Nóvember</option>
-                           <option value="12">Desember</option>
-                        </select>
-                     </div>
-                  </div>
-                  <div class="col-xs-6 col-sm-3">
-                     <div class="form-group">
-                        <label for="taken-year" class="control-label">Ár</label>
-                        <select class="form-control" id="taken-year">
-                           <!-- Filled in by init() function -->
-                        </select>
-                     </div>
-                  </div>
-                  <div class="col-xs-12 col-sm-6">
-                     <div id="numpmt-status" class="form-group label-floating">
-                        <label for="numpmt" class="control-label">Fjöldi afborgana (480 ef 40 ár, 300 ef 25 ár)</label>
-                        <input type="text" name="numpmt" id="numpmt" value="480"
-                           maxlength="3" class="form-control">
-                        <span class="form-control-feedback"></span>
-                     </div>
-                  </div>
-                  </div>
-                  <div class="row">
-                  <div class="col-xs-12 col-sm-4">
-                     <div id="interest-status" class="form-group label-floating">
-                        <label for="interest" class="control-label">Vextir</label>
-                        <div class="input-group">
-                           <div>
-                              <input type="text" name="interest" id="interest"
-                                 maxlength="5" class="form-control" value="4,6">
-                              <span class="form-control-feedback pull-left"></span>
-                           </div>
-                           <span class="input-group-addon">%</span>
-                        </div>
-                     </div>
-                  </div>
-                  <div class="col-xs-offset-0 col-sm-offset-2"></div>
-                  <div class="col-xs-12 col-sm-6">
-                     <div class="form-group">
-                        <div class="togglebutton">
-                           <label id="explain-wrong">
-                              <input type="checkbox" name="wrong" id="wrong" value="wrong" checked="">
-                                 Nota vaxtaútreikning ÍLS og bankanna
-                           </label>
-                        </div>
-                     </div>
-                  </div>
-                  </div>
-                  <div class="row">
-                  <div class="col-xs-12">
-                     <div class="pull-right">
-                        <button type="submit" id="submit" class="btn btn-primary">
-                           <span class="glyphicon glyphicon-play"></span>&nbsp;&nbsp;Uppfæra
-                        </button>
-                     </div>
-                  </div>
-                  </div>
-               </div>
-            </div>
-         </div>
-      </div>
-      
-      <div class="row result" id="results-principal">
-         <div class="col-xs-12">
-            <div class="panel panel-info">
-               <div class="panel-heading clickable">
-                  <h3 class="panel-title">Þróun eftirstöðva lánsins á upphaflegu verðlagi þess</h3>
-                  <span class="pull-right"><i class="glyphicon glyphicon-chevron-up"></i></span>
-               </div>
-               <div class="panel-body">
-                  <div class="col-sm-12">
-                     <p>Eins og nafnið bendir til eru jafngreiðslulán stillt af þannig að
-                     þú greiðir alltaf jafngilda fjárhæð af láninu mánaðarlega. Sú fjárhæð
-                     skiptist í afborgun og vexti. Afborgunin er lægri framan af láninu en
-                     hækkar með tímanum. Á móti eru vextirnir hærri framan af en lækka þegar
-                     fram í sækir.</p>
-                     <p>Hér er jafngreiðslulánið þitt eins og upphaflega var til þess stofnað.
-                     Á grafinu sjást eftirstöðvar lánsins lækka með
-                     tíma, <b>á upphaflegu verðlagi þess</b>, hægt fyrst en svo hraðar í lokin.
-                     Farðu með músina yfir grafið til að sjá upphæðina í byrjun
-                     hvers mánaðar.</p>
-                     <p class="small">Lóðréttu skilin milli ljósari og dekkri litar eru við daginn í dag,
-                     þ.e. milli fortíðar og framtíðar.</p>
-                  </div>
-                  <div class="col-sm-12" id="canvas-principal">
-                     <!-- SVG stuff is inserted here -->
-                  </div>
-               </div>
-            </div>
-         </div>
-      </div>
-
-      <div class="row result" id="results-about">
-         <div class="col-xs-12">
-            <div class="panel panel-success">
-               <div class="panel-heading clickable panel-collapsed">
-                  <h3 class="panel-title">Nánar um lánið</h3>
-                  <span class="pull-right"><i class="glyphicon glyphicon-chevron-down"></i></span>
-               </div>
-               <div class="panel-body">
-                  <div class="col-sm-12">
-                     <ul>
-
-                        <li>Lánið ber <b><span class="result-interest"></span>%</b> virka ársvexti,
-                        eða <b><span id="result-monthly-interest"></span>%</b> mánaðarlega vexti.</li>
-
-                        <li>Vísitala neysluverðs var <b><span id="result-basevnv"></span></b> þegar lánið var tekið, en hún er núna <b><span id="result-vnv-now"></span></b>.
-                        Það samsvarar <b><span class="result-inflation"></span>%</b> árlegri
-                        meðalverðbólgu (rýrnun krónunnar).</li>
-
-                        <li>Á upphaflegu verðlagi var höfuðstóll lánsins
-                        <b><span id="result-principal"></span></b> krónur, en á núverandi
-                        verðlagi er hann <b><span id="result-principal-now"></span></b> krónur.</li>
-
-                        <li>Á upphaflegu verðlagi væru jafnar greiðslur af láninu (afborgun og vextir)
-                        <b><span class="result-pmt"></span></b> krónur á mánuði
-                        allan lánstímann, en á verðlagi dagsins í dag er mánaðarleg greiðsla
-                        <b><span class="result-pmt-now"></span></b> krónur.</li>
-
-                        <li>Á upphaflegu verðlagi næmu endurgreiðslur lánsins samtals
-                        <b><span id="result-total"></span></b> krónum, en á núverandi
-                        verðlagi <b><span id="result-total-now"></span></b> krónum.</li>
-
-                        <li id="wrong-cost">Því má við bæta að ef virkir ársvextir lánsins væru
-                        <b><span id="result-interest-nominal"></span>%</b> í stað
-                        <b><span class="result-interest"></span>%</b> þá næmu endurgreiðslur
-                        samtals <b><span id="result-total-correct"></span></b> kr.
-                        á verðlagi dagsins. Þar munar <b><span id="result-total-diff"></span></b>
-                        krónum.</li>
-
-                     </ul>
-                  </div>
-               </div>
-            </div>
-         </div>
-      </div>
-      
-      <div class="row result" id="results-payments">
-         <div class="col-xs-12">
-            <div class="panel panel-danger">
-               <div class="panel-heading clickable panel-collapsed">
-                  <h3 class="panel-title">Greiðslur af láninu yfir tíma</h3>
-                  <span class="pull-right"><i class="glyphicon glyphicon-chevron-down"></i></span>
-               </div>
-               <div class="panel-body">
-                  <p>Hér sjást gjalddagar lánsins, <b>á upphaflegu verðlagi</b> þess.</p>
-                  <table class="table table-condensed" id="pmts">
-                     <thead>
-                        <th>Nr.</th>
-                        <th class="date">Dags.</th>
-                        <th>Í byrjun</th>
-                        <th>Afborgun</th>
-                        <th>+ vextir</th>
-                        <th>= greiðsla</th>
-                        <th>Í lok</th>
-                     </thead>
-                     <tbody id="payments">
-                        <!-- Payments will be inserted here -->
-                     </tbody>
-                  </table>
-               </div>
-            </div>
-         </div>
-      </div>
-      
-      <div class="row result" id="results-amort">
-         <div class="col-xs-12">
-            <div class="panel panel-warning">
-               <div class="panel-heading clickable">
-                  <h3 class="panel-title">Afborganir og vextir á upphaflegu verðlagi lánsins</h3>
-                  <span class="pull-right"><i class="glyphicon glyphicon-chevron-up"></i></span>
-               </div>
-               <div class="panel-body">
-                  <div class="col-sm-12">
-                     <p>Hér sjást afborganir og vextir jafngreiðslulánsins, <b>á upphaflegu verðlagi
-                     þess</b>. Jafngreiðslan er <b><span class="result-pmt"></span>
-                     krónur á mánuði</b>, og skiptist í afborgun og vexti eins og hér sést.
-                     Farðu með músina yfir grafið til að sjá upphæðir hvers mánaðar.</p>
-                     <p class="small">Lóðréttu skilin milli ljósari og dekkri litar eru við daginn í dag,
-                     þ.e. milli fortíðar og framtíðar.</p>
-                  </div>
-                  <div class="col-sm-12" id="canvas-payments">
-                     <!-- SVG stuff is inserted here -->
-                  </div>
-               </div>
-            </div>
-         </div>
-      </div>
-
-      <div class="row result" id="results-inflation">
-         <div class="col-xs-12">
-            <div class="panel panel-default">
-               <div class="panel-heading clickable">
-                  <h3 class="panel-title">Rýrnun krónunnar vegna verðbólgu</h3>
-                  <span class="pull-right"><i class="glyphicon glyphicon-chevron-up"></i></span>
-               </div>
-               <div class="panel-body">
-                  <div class="col-sm-12">
-                     <p>Þar sem lánið er verðtryggt hafa verðbólga og rýrnandi verðgildi
-                     krónunnar mikið að segja um stöðu þess hverju sinni og greiðslur af því
-                     í framtíðinni.</p>
-                     <p>Hér sést hvernig íslenska krónan hefur rýrnað vegna verðbólgu
-                     síðan lánið var tekið, en rýrnunin nemur að meðaltali
-                     <b><span class="result-inflation"></span>%</b> á ári.</p>
-                     <p><b>Kaupmáttur 1.000 króna</b> er sýndur á hverjum tíma,
-                     í hlutfalli við kaupmátt 1.000 króna eins og hann var
-                     í upphafi lánstímans. Miðað er við vísitölu neysluverðs.</p>
-                  </div>
-                  <div class="col-sm-12" id="canvas-inflation">
-                     <!-- SVG stuff is inserted here -->
-                  </div>
-               </div>
-               <div class="panel-body">
-                  <div class="col-sm-12">
-                     <p>Hér er „öfug“ sýn á sömu rýrnun. Grafið sýnir <b>hversu margar krónur þurfti</b>
-                     á hverjum tíma til að kaupa sömu neyslukörfu og fékkst fyrir 1.000 krónur
-                     í upphafi lánstímans.</p>
-                  </div>
-                  <div class="col-sm-12" id="canvas-inverse">
-                     <!-- SVG stuff is inserted here -->
-                  </div>
-               </div>
-            </div>
-         </div>
-      </div>
-
-      <div class="row result" id="results-inflated">
-         <div class="col-xs-12">
-            <div class="panel panel-primary">
-               <div class="panel-heading clickable">
-                  <h3 class="panel-title">Eftirstöðvar lánsins í rýrnandi krónum</h3>
-                  <span class="pull-right"><i class="glyphicon glyphicon-chevron-up"></i></span>
-               </div>
-               <div class="panel-body">
-                  <div class="col-sm-12">
-                     <p>Eftir því sem krónan rýrnar <b>þarf fleiri krónur til að samsvara
-                     upphaflegu verðmæti lánsins</b>, og eftirstöðvum þess hverju sinni, eins
-                     og þær hefðu verið á upphaflegu verðlagi.
-                     Með öðrum orðum: Hver upphaflegur þúsundkall kostar meira,
-                     sbr. næsta graf á undan.</p>
-                     <p>Hér eru eftirstöðvar lánsins sýndar eins og þær voru í rýrnandi krónum
-                     hverju sinni, að teknu tilliti til verðbólgu til dagsins í dag. Upphaflega
-                     lánið er jafnframt sýnt í bláum lit.
-                     <b><span class="inflation-premise">Frá deginum í dag er lánið sýnt
-                     án verðbólgu.</span></b>
-                     Farðu með músina yfir fjólubláa hlutann til að sjá uppreiknaðar
-                     (verðbættar) eftirstöðvar í byrjun hvers mánaðar.</p>
-                     <div class="row">
-                        <div class="col-xs-12 col-sm-5">
-                        <p class="small">Lóðréttu skilin milli ljósari og dekkri litar eru við
-                        daginn í dag, þ.e. milli fortíðar og framtíðar.</p>
-                        </div>
-                        <div class="col-xs-12 col-sm-7">
-                        <div class="form-group pull-right">
-                           <label for="inflation-future" class="control-label">Verðbólga til framtíðar</label>
-                           <select class="form-control" id="inflation-future">
-                              <!-- Options will be inserted here -->
+                     <div class="col-xs-6 col-sm-3 col-md-6">
+                        <div class="form-group">
+                           <label for="taken-month" class="control-label nomargin">Lántökumánuður</label>
+                           <select class="form-control" id="taken-month">
+                              <option value="01">Janúar</option>
+                              <option value="02">Febrúar</option>
+                              <option value="03">Mars</option>
+                              <option value="04">Apríl</option>
+                              <option value="05">Maí</option>
+                              <option value="06">Júní</option>
+                              <option value="07" selected>Júlí</option>
+                              <option value="08">Ágúst</option>
+                              <option value="09">September</option>
+                              <option value="10">Október</option>
+                              <option value="11">Nóvember</option>
+                              <option value="12">Desember</option>
                            </select>
                         </div>
+                     </div>
+                     <div class="col-xs-6 col-sm-3 col-md-6">
+                        <div class="form-group">
+                           <label for="taken-year" class="control-label nomargin">Ár</label>
+                           <select class="form-control" id="taken-year">
+                              <!-- Filled in by init() function -->
+                           </select>
+                        </div>
+                     </div>
+                     <div class="col-xs-12 col-sm-6 col-md-12">
+                        <div id="numpmt-status" class="form-group label-floating">
+                           <label for="numpmt" class="control-label">Fjöldi afborgana (480 ef 40 ár, 300 ef 25 ár)</label>
+                           <input type="text" name="numpmt" id="numpmt" value="480"
+                              maxlength="3" class="form-control">
+                           <span class="form-control-feedback"></span>
                         </div>
                      </div>
                   </div>
-                  <div class="col-sm-12" id="canvas-inflated">
-                     <!-- SVG stuff is inserted here -->
+                  <div class="row">
+                     <div class="col-xs-12 col-sm-4 col-md-12">
+                        <div id="interest-status" class="form-group label-floating">
+                           <label for="interest" class="control-label">Vextir</label>
+                           <div class="input-group">
+                              <div>
+                                 <input type="text" name="interest" id="interest"
+                                    maxlength="5" class="form-control" value="4,6">
+                                 <span class="form-control-feedback pull-left"></span>
+                              </div>
+                              <span class="input-group-addon">%</span>
+                           </div>
+                        </div>
+                     </div>
+                     <div class="col-xs-offset-0 col-sm-offset-2 col-md-offset-0"></div>
+                     <div class="col-xs-12 col-sm-6 col-md-12">
+                        <div class="form-group">
+                           <div class="togglebutton">
+                              <label id="explain-wrong">
+                                 <input type="checkbox" name="wrong" id="wrong" value="wrong" checked=""><div style="width: 70%; float: right">Nota
+                                    vaxtaútreikning ÍLS og bankanna</div>
+                              </label>
+                           </div>
+                        </div>
+                     </div>
+                  </div>
+                  <div class="row">
+                     <div class="col-xs-12">
+                        <div class="pull-right">
+                           <button type="submit" id="submit" class="btn btn-primary">
+                              <span class="glyphicon glyphicon-play"></span>&nbsp;&nbsp;Uppfæra
+                           </button>
+                        </div>
+                     </div>
                   </div>
                </div>
             </div>
          </div>
-      </div>
 
-      <div class="row result" id="results-amort-inflated">
-         <div class="col-xs-12">
-            <div class="panel panel-warning">
-               <div class="panel-heading clickable">
-                  <h3 class="panel-title">Afborganir og vextir í rýrnandi krónum</h3>
-                  <span class="pull-right"><i class="glyphicon glyphicon-chevron-up"></i></span>
-               </div>
-               <div class="panel-body">
-                  <div class="col-sm-12">
-                     <p>Hér sjást afborganir og vextir jafngreiðslulánsins, <b>í rýrnandi
-                     krónum hverju sinni</b>.
-                     <span class="inflation-premise">Frá deginum í dag er lánið sýnt án verðbólgu.</span>
-                     Jafngreiðslan, sem upphaflega var <b><span class="result-pmt"></span></b> kr.
-                     á mánuði, er <b><span class="result-pmt-now"></span></b> kr. á verðlagi
-                     dagsins.
-                     Farðu með músina yfir grafið til að sjá upphæðir hvers mánaðar.</p>
-                     <p class="small">Lóðréttu skilin milli ljósari og dekkri litar eru við daginn í dag,
-                     þ.e. milli fortíðar og framtíðar.</p>
-                  </div>
-                  <div class="col-sm-12" id="canvas-payments-inflated">
-                     <!-- SVG stuff is inserted here -->
+         <div class="col xs-12 col-md-9 results-container">
+
+            <!-- <div class="results"> -->
+
+            <div class="row result" id="results-principal">
+               <div class="col-xs-12">
+                  <div class="panel panel-info">
+                     <div class="panel-heading clickable">
+                        <h3 class="panel-title">Þróun eftirstöðva lánsins á upphaflegu verðlagi þess</h3>
+                        <span class="pull-right"><i class="glyphicon glyphicon-chevron-up"></i></span>
+                     </div>
+                     <div class="panel-body">
+                        <div class="col-sm-12">
+                           <p>Eins og nafnið bendir til eru jafngreiðslulán stillt af þannig að
+                           þú greiðir alltaf jafngilda fjárhæð af láninu mánaðarlega. Sú fjárhæð
+                           skiptist í afborgun og vexti. Afborgunin er lægri framan af láninu en
+                           hækkar með tímanum. Á móti eru vextirnir hærri framan af en lækka þegar
+                           fram í sækir.</p>
+                           <p>Hér er jafngreiðslulánið þitt eins og upphaflega var til þess stofnað.
+                           Á grafinu sjást eftirstöðvar lánsins lækka með
+                           tíma, <b>á upphaflegu verðlagi þess</b>, hægt fyrst en svo hraðar í lokin.
+                           Farðu með músina yfir grafið til að sjá upphæðina í byrjun
+                           hvers mánaðar.</p>
+                           <p class="small">Lóðréttu skilin milli ljósari og dekkri litar eru við daginn í dag,
+                           þ.e. milli fortíðar og framtíðar.</p>
+                        </div>
+                        <div class="col-sm-12" id="canvas-principal">
+                           <!-- SVG stuff is inserted here -->
+                        </div>
+                     </div>
                   </div>
                </div>
             </div>
-         </div>
-      </div>
 
-   </div>
+            <div class="row result" id="results-about">
+               <div class="col-xs-12">
+                  <div class="panel panel-success">
+                     <div class="panel-heading clickable panel-collapsed">
+                        <h3 class="panel-title">Nánar um lánið</h3>
+                        <span class="pull-right"><i class="glyphicon glyphicon-chevron-down"></i></span>
+                     </div>
+                     <div class="panel-body">
+                        <div class="col-sm-12">
+                           <ul>
+
+                              <li>Lánið ber <b><span class="result-interest"></span>%</b> virka ársvexti,
+                              eða <b><span id="result-monthly-interest"></span>%</b> mánaðarlega vexti.</li>
+
+                              <li>Vísitala neysluverðs var <b><span id="result-basevnv"></span></b> þegar lánið var tekið, en hún er núna <b><span id="result-vnv-now"></span></b>.
+                              Það samsvarar <b><span class="result-inflation"></span>%</b> árlegri
+                              meðalverðbólgu (rýrnun krónunnar).</li>
+
+                              <li>Á upphaflegu verðlagi var höfuðstóll lánsins
+                              <b><span id="result-principal"></span></b> krónur, en á núverandi
+                              verðlagi er hann <b><span id="result-principal-now"></span></b> krónur.</li>
+
+                              <li>Á upphaflegu verðlagi væru jafnar greiðslur af láninu (afborgun og vextir)
+                              <b><span class="result-pmt"></span></b> krónur á mánuði
+                              allan lánstímann, en á verðlagi dagsins í dag er mánaðarleg greiðsla
+                              <b><span class="result-pmt-now"></span></b> krónur.</li>
+
+                              <li>Á upphaflegu verðlagi næmu endurgreiðslur lánsins samtals
+                              <b><span id="result-total"></span></b> krónum, en á núverandi
+                              verðlagi <b><span id="result-total-now"></span></b> krónum.</li>
+
+                              <li id="wrong-cost">Því má við bæta að ef virkir ársvextir lánsins væru
+                              <b><span id="result-interest-nominal"></span>%</b> í stað
+                              <b><span class="result-interest"></span>%</b> þá næmu endurgreiðslur
+                              samtals <b><span id="result-total-correct"></span></b> kr.
+                              á verðlagi dagsins. Þar munar <b><span id="result-total-diff"></span></b>
+                              krónum.</li>
+
+                           </ul>
+                        </div>
+                     </div>
+                  </div>
+               </div>
+            </div>
+            
+            <div class="row result" id="results-payments">
+               <div class="col-xs-12">
+                  <div class="panel panel-danger">
+                     <div class="panel-heading clickable panel-collapsed">
+                        <h3 class="panel-title">Greiðslur af láninu yfir tíma</h3>
+                        <span class="pull-right"><i class="glyphicon glyphicon-chevron-down"></i></span>
+                     </div>
+                     <div class="panel-body">
+                        <p>Hér sjást gjalddagar lánsins, <b>á upphaflegu verðlagi</b> þess.</p>
+                        <table class="table table-condensed" id="pmts">
+                           <thead>
+                              <th>Nr.</th>
+                              <th class="date">Dags.</th>
+                              <th>Í byrjun</th>
+                              <th>Afborgun</th>
+                              <th>+ vextir</th>
+                              <th>= greiðsla</th>
+                              <th>Í lok</th>
+                           </thead>
+                           <tbody id="payments">
+                              <!-- Payments will be inserted here -->
+                           </tbody>
+                        </table>
+                     </div>
+                  </div>
+               </div>
+            </div>
+            
+            <div class="row result" id="results-amort">
+               <div class="col-xs-12">
+                  <div class="panel panel-warning">
+                     <div class="panel-heading clickable">
+                        <h3 class="panel-title">Afborganir og vextir á upphaflegu verðlagi lánsins</h3>
+                        <span class="pull-right"><i class="glyphicon glyphicon-chevron-up"></i></span>
+                     </div>
+                     <div class="panel-body">
+                        <div class="col-sm-12">
+                           <p>Hér sjást afborganir og vextir jafngreiðslulánsins, <b>á upphaflegu verðlagi
+                           þess</b>. Jafngreiðslan er <b><span class="result-pmt"></span>
+                           krónur á mánuði</b>, og skiptist í afborgun og vexti eins og hér sést.
+                           Farðu með músina yfir grafið til að sjá upphæðir hvers mánaðar.</p>
+                           <p class="small">Lóðréttu skilin milli ljósari og dekkri litar eru við daginn í dag,
+                           þ.e. milli fortíðar og framtíðar.</p>
+                        </div>
+                        <div class="col-sm-12" id="canvas-payments">
+                           <!-- SVG stuff is inserted here -->
+                        </div>
+                     </div>
+                  </div>
+               </div>
+            </div>
+
+            <div class="row result" id="results-inflation">
+               <div class="col-xs-12">
+                  <div class="panel panel-default">
+                     <div class="panel-heading clickable">
+                        <h3 class="panel-title">Rýrnun krónunnar vegna verðbólgu</h3>
+                        <span class="pull-right"><i class="glyphicon glyphicon-chevron-up"></i></span>
+                     </div>
+                     <div class="panel-body">
+                        <div class="col-sm-12">
+                           <p>Þar sem lánið er verðtryggt hafa verðbólga og rýrnandi verðgildi
+                           krónunnar mikið að segja um stöðu þess hverju sinni og greiðslur af því
+                           í framtíðinni.</p>
+                           <p>Hér sést hvernig íslenska krónan hefur rýrnað vegna verðbólgu
+                           síðan lánið var tekið, en rýrnunin nemur að meðaltali
+                           <b><span class="result-inflation"></span>%</b> á ári.</p>
+                           <p><b>Kaupmáttur 1.000 króna</b> er sýndur á hverjum tíma,
+                           í hlutfalli við kaupmátt 1.000 króna eins og hann var
+                           í upphafi lánstímans. Miðað er við vísitölu neysluverðs.</p>
+                        </div>
+                        <div class="col-sm-12" id="canvas-inflation">
+                           <!-- SVG stuff is inserted here -->
+                        </div>
+                     </div>
+                     <div class="panel-body">
+                        <div class="col-sm-12">
+                           <p>Hér er „öfug“ sýn á sömu rýrnun. Grafið sýnir <b>hversu margar krónur þurfti</b>
+                           á hverjum tíma til að kaupa sömu neyslukörfu og fékkst fyrir 1.000 krónur
+                           í upphafi lánstímans.</p>
+                        </div>
+                        <div class="col-sm-12" id="canvas-inverse">
+                           <!-- SVG stuff is inserted here -->
+                        </div>
+                     </div>
+                  </div>
+               </div>
+            </div>
+
+            <div class="row result" id="results-inflated">
+               <div class="col-xs-12">
+                  <div class="panel panel-primary">
+                     <div class="panel-heading clickable">
+                        <h3 class="panel-title">Eftirstöðvar lánsins í rýrnandi krónum</h3>
+                        <span class="pull-right"><i class="glyphicon glyphicon-chevron-up"></i></span>
+                     </div>
+                     <div class="panel-body">
+                        <div class="col-sm-12">
+                           <p>Eftir því sem krónan rýrnar <b>þarf fleiri krónur til að samsvara
+                           upphaflegu verðmæti lánsins</b>, og eftirstöðvum þess hverju sinni, eins
+                           og þær hefðu verið á upphaflegu verðlagi.
+                           Með öðrum orðum: Hver upphaflegur þúsundkall kostar meira,
+                           sbr. næsta graf á undan.</p>
+                           <p>Hér eru eftirstöðvar lánsins sýndar eins og þær voru í rýrnandi krónum
+                           hverju sinni, að teknu tilliti til verðbólgu til dagsins í dag. Upphaflega
+                           lánið er jafnframt sýnt í bláum lit.
+                           <b><span class="inflation-premise">Frá deginum í dag er lánið sýnt
+                           án verðbólgu.</span></b>
+                           Farðu með músina yfir fjólubláa hlutann til að sjá uppreiknaðar
+                           (verðbættar) eftirstöðvar í byrjun hvers mánaðar.</p>
+                           <div class="row">
+                              <div class="col-xs-12 col-sm-5">
+                              <p class="small">Lóðréttu skilin milli ljósari og dekkri litar eru við
+                              daginn í dag, þ.e. milli fortíðar og framtíðar.</p>
+                              </div>
+                              <div class="col-xs-12 col-sm-7">
+                              <div class="form-group pull-right">
+                                 <label for="inflation-future" class="control-label">Verðbólga til framtíðar</label>
+                                 <select class="form-control" id="inflation-future">
+                                    <!-- Options will be inserted here -->
+                                 </select>
+                              </div>
+                              </div>
+                           </div>
+                        </div>
+                        <div class="col-sm-12" id="canvas-inflated">
+                           <!-- SVG stuff is inserted here -->
+                        </div>
+                     </div>
+                  </div>
+               </div>
+            </div>
+
+            <div class="row result" id="results-amort-inflated">
+               <div class="col-xs-12">
+                  <div class="panel panel-warning">
+                     <div class="panel-heading clickable">
+                        <h3 class="panel-title">Afborganir og vextir í rýrnandi krónum</h3>
+                        <span class="pull-right"><i class="glyphicon glyphicon-chevron-up"></i></span>
+                     </div>
+                     <div class="panel-body">
+                        <div class="col-sm-12">
+                           <p>Hér sjást afborganir og vextir jafngreiðslulánsins, <b>í rýrnandi
+                           krónum hverju sinni</b>.
+                           <span class="inflation-premise">Frá deginum í dag er lánið sýnt án verðbólgu.</span>
+                           Jafngreiðslan, sem upphaflega var <b><span class="result-pmt"></span></b> kr.
+                           á mánuði, er <b><span class="result-pmt-now"></span></b> kr. á verðlagi
+                           dagsins.
+                           Farðu með músina yfir grafið til að sjá upphæðir hvers mánaðar.</p>
+                           <p class="small">Lóðréttu skilin milli ljósari og dekkri litar eru við daginn í dag,
+                           þ.e. milli fortíðar og framtíðar.</p>
+                        </div>
+                        <div class="col-sm-12" id="canvas-payments-inflated">
+                           <!-- SVG stuff is inserted here -->
+                        </div>
+                     </div>
+                  </div>
+               </div>
+            </div>
+
+            <!-- </div> -->
+
+         </div>
+
+      </div> <!-- row -->
+
+   </div> <!-- container -->
    
    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
    <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
@@ -765,6 +816,14 @@
          }
       }
 
+      function setContainerHeight() {
+         // Adjust the results container column so that
+         // it extends to the bottom of the window
+         var c = $("div.results-container");
+         var h = Math.max(0, window.innerHeight - c.offset().top);
+         c.height(h);
+      }
+
       function init() {
          // Handle the submit button and the Enter key
          $("#submit").click(function(e) { e.preventDefault(); submit(); });
@@ -871,6 +930,9 @@
          });
          // Start listening for media changes
          initMediaListener();
+         // Set the results container height
+         setContainerHeight();
+         $(window).resize(setContainerHeight);
          // Display the initial data, if everything validates OK
          update();
          // Make sure that collapsible planels that are by default closed
