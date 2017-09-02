@@ -46,8 +46,10 @@
 
 <style>
 
-   div.container {
-      /* max-width: 960px; */
+   .container {
+      /* Reset Bootstrap margins for the narrowest devices, such as iPhone 5 */
+      padding-left: 4px;
+      padding-right: 4px;
    }
 
    div#header {
@@ -82,6 +84,8 @@
 
    div#hdr-2a h3 {
       font-size: 1.5em;
+      margin-top: 0;
+      margin-bottom: 25px;
    }
 
    div#hdr-2b {
@@ -131,6 +135,11 @@
    .panel-heading span {
       margin-top: -20px;
       font-size: 15px;
+   }
+
+   .form-control,
+   .form-group .form-control {
+      font-weight: 500;
    }
 
    div.result {
@@ -238,36 +247,13 @@
       /* fill: red; */
    }
 
-   .bar.hover {
-      fill: orange;
-      stroke: orange;
-      stroke-width: 1px;
-   }
-
-   .bar:hover {
-      fill: orange;
-      stroke: orange;
-      stroke-width: 1px;
-   }
-
-   .bar.principal:hover { /* !!! TODO: find out why this is necessary */
-      fill: orange;
-      stroke: orange;
-      stroke-width: 1px;
-   }
-
-   .bar.inflated:hover {
-      fill: orange;
-      stroke: orange;
-      stroke-width: 1px;
-   }
-
-   .bar.amort:hover {
-      fill: orange;
-      stroke: orange;
-      stroke-width: 1px;
-   }
-
+   .bar.hover,
+   .bar.principal.hover,
+   .bar.principal.past.hover,
+   .bar:hover,
+   .bar.principal:hover,
+   .bar.inflated:hover,
+   .bar.amort:hover,
    .bar.interest:hover {
       fill: orange;
       stroke: orange;
@@ -350,6 +336,25 @@
       content: "Fjöldi afborgana (480 ef 40 ár, 300 ef 25 ár)";
    }
 
+   #label-interest {
+      width: 75%;
+      float: right;
+   }
+
+   #label-interest::before {
+      content: "Nota vaxtaútreikning ÍLS og bankanna";
+   }
+
+@media (min-width: 321px) {
+
+   /* Restore default Bootstrap setting for >iPhone5 */
+   .container {
+      padding-left: 15px;
+      padding-right: 15px;
+   }
+
+}
+
 @media (min-width: 768px) {
 
    div#hdr-1 {
@@ -357,7 +362,7 @@
    }
 
    div#hdr-1 h2 {
-      margin-top: 20px;
+      margin-top: 21px;
    }
 
    div#hdr-2a {
@@ -398,7 +403,7 @@
 
 @media (min-width: 992px) {
 
-   /* Adapt to layout where the input form is to the left
+   /* Adapt to layout where the input form is fixed to the left
       and the results are displayed in a scrollable column
       to the right. */
 
@@ -446,6 +451,15 @@
       top: auto;
       bottom: 16px;
       right: 12px;
+   }
+
+   #label-interest {
+      width: 72%;
+   }
+
+   #label-interest::before {
+      white-space: pre;
+      content: "Nota vaxtaútreikning\0aÍLS og bankanna";
    }
 
 }
@@ -569,8 +583,8 @@
                         <div class="form-group">
                            <div class="togglebutton">
                               <label id="explain-wrong">
-                                 <input type="checkbox" name="wrong" id="wrong" value="wrong" checked=""><div style="width: 70%; float: right">Nota
-                                    vaxtaútreikning ÍLS og bankanna</div>
+                                 <input type="checkbox" name="wrong" id="wrong"
+                                    value="wrong" checked=""><div id="label-interest"></div>
                               </label>
                            </div>
                         </div>
@@ -858,7 +872,17 @@
 
       "use strict";
 
+      // True if we are displaying the UI as one scrolling column;
+      // false if the UI is wide with the entry form fixed to the left
+      // and the results scrolling to the right
       var narrowUI = false;
+      var defaults = {
+         amount : 18000000,
+         interest : 4.6,
+         year : 2006,
+         month : 7,
+         numpmt : 480
+      };
 
       function showStatus(id, err) {
          // Show the validation status of a field depending on
@@ -919,7 +943,7 @@
          var wrong = $("#wrong").is(":checked");
          var year = parseInt($("#taken-year").val());
          var month = parseInt($("#taken-month").val());
-         var futureInflation = parseFloat($("#inflation-future").val());
+         var futureInflation = parseFloat($("#inflation-future").val()) || 0.0;
          // Encode the parameters in the hash part of the URL
          location.hash = [amt, interest, num, wrong, year,
             ("0" + month).slice(-2,2), futureInflation].join("+");
@@ -939,9 +963,8 @@
          // Validate input fields; if error, focus on the error field.
          // Otherwise, update the displayed data.
          var errField = checkAndUpdate(false);
-         if (errField !== undefined) {
+         if (errField !== undefined)
             $(errField).focus();
-         }
       }
 
       function update() {
@@ -959,23 +982,12 @@
          }
       }
 
-      function mediaMinWidth1200(mql) {
-         if (mql.matches) {
-            // Take action when min-width exceeds 1200
-         }
-      }
-
       function initMediaListener() {
          // Install listener functions for media changes
          var mql = window.matchMedia("(min-width: 992px)");
          if (mql) {
             mediaMinWidth992(mql);
             mql.addListener(mediaMinWidth992);
-         }
-         mql = window.matchMedia("(min-width: 1200px)");
-         if (mql) {
-            mediaMinWidth1200(mql);
-            mql.addListener(mediaMinWidth1200);
          }
       }
 
@@ -1027,8 +1039,8 @@
          for (var year = 1988; year <= 2017; year++) {
             var ystr = year.toString();
             var opt = $("<option>").attr("value", ystr).text(ystr);
-            if (year == 2006)
-               // Set a default value of 2006
+            if (year == defaults.year)
+               // Set an initial default value of 2006
                opt.attr("selected", "");
             yearControl.append(opt);
          }
@@ -1041,17 +1053,17 @@
          if (location.hash && location.hash.charAt(0) == "#") {
             var p = location.hash.slice(1).split("+");
             if (p[0] !== undefined)
-               $("#amount").val(p[0]);
+               $("#amount").val(toCurrency(parseInt(p[0]) || defaults.amount));
             if (p[1] !== undefined)
-               $("#interest").val(p[1]);
+               $("#interest").val(toFixed(parseFloat(p[1]) || defaults.interest, 2));
             if (p[2] !== undefined)
-               $("#numpmt").val(p[2]);
+               $("#numpmt").val(toFixed(parseInt(p[2]) || defaults.numpmt, 0));
             if (p[3] !== undefined)
                $("#wrong").prop("checked", p[3] != "false");
             if (p[4] !== undefined)
-               $("#taken-year").val(p[4]);
+               $("#taken-year").val(toFixed(parseInt(p[4]) || defaults.year, 0));
             if (p[5] !== undefined)
-               $("#taken-month").val(p[5]);
+               $("#taken-month").val(toFixed(100 + (parseInt(p[5]) || defaults.month), 0).slice(-2));
             if (p[6] !== undefined)
                $("#inflation-future").val(p[6]);
          }
@@ -1095,7 +1107,11 @@
          initMediaListener();
          // Set the results container height
          setContainerHeight();
-         $(window).resize(setContainerHeight);
+         // Update container height and redraw graphs on window resize
+         $(window).resize(function() {
+            setContainerHeight();
+            update();
+         });
          // Display the initial data, if everything validates OK
          update();
          // Make sure that collapsible planels that are by default closed
