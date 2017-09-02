@@ -50,20 +50,78 @@
       /* max-width: 960px; */
    }
 
-   #header h2 {
-      font-weight: 400;
-      margin-bottom: 4px;
+   div#header {
+      position: relative;
+      margin-left: 4px;
+      margin-right: 4px;
    }
 
-   #header h3 {
+   #header div {
+      margin-left: 0;
+      margin-right: 0;
+      display: inline-block;
+   }
+
+   div#hdr-1 {
+      float: left;
+   }
+
+   div#hdr-1 h2 {
+      font-weight: 400;
+      margin-top: 18px;
+   }
+
+   div#hdr-2a {
+      float: right;
+      text-align: right;
       line-height: 1.25;
       margin-top: 0px;
       padding-top: 6px;
       padding-bottom: 6px;
    }
 
-   #header img {
-      padding-top: 6px;
+   div#hdr-2a h3 {
+      font-size: 1.5em;
+   }
+
+   div#hdr-2b {
+      display: none;
+      clear: left;
+      float: left;
+      margin-left: 16px;
+      margin-top: 40px;
+      padding-top: 0px;
+   }
+
+   div#hdr-2b h3 {
+      margin-top: 0;
+      margin-bottom: 0;
+      line-height: 1.0;
+   }
+
+   div#hdr-3 {
+      display: block;
+   }
+
+   div#hdr-3 h3 {
+      font-size: 1.1em;
+      margin-top: 4px;
+      margin-bottom: 4px;
+   }
+
+   div#hdr-4 {
+      display: none;
+   }
+
+   div#hdr-5 {
+      position: absolute;
+      bottom: 6px;
+      left: 2px;
+      text-align: left;
+   }
+
+   .byline::before {
+      content: "eftir Vilhjálm Þorsteinsson";
    }
 
    .clickable {
@@ -238,7 +296,7 @@
       pointer-events: none;
    }
 
-   div.tooltip div:after {
+   div.tooltip div::after {
       box-sizing: border-box;
       display: inline;
       font-size: 14px;
@@ -288,6 +346,56 @@
       margin-top: 12px;
    }
 
+   #label-numpmt::before {
+      content: "Fjöldi afborgana (480 ef 40 ár, 300 ef 25 ár)";
+   }
+
+@media (min-width: 768px) {
+
+   div#hdr-1 {
+      float: none;
+   }
+
+   div#hdr-1 h2 {
+      margin-top: 20px;
+   }
+
+   div#hdr-2a {
+      display: none;
+   }
+
+   div#hdr-2b {
+      display: block;
+      clear: none;
+      float: none;
+      margin-left: 0;
+      margin-top: 0;
+      margin-bottom: 18px;
+   }
+
+   div#hdr-3 {
+      display: inline-block;
+      vertical-align: top;
+   }
+
+   div#hdr-3 h3 {
+      margin: 0;
+      padding-right: 8px;
+   }
+
+   div#hdr-4 {
+      display: inline-block;
+   }
+
+   div#hdr-5 {
+      top: 30px;
+      bottom: auto;
+      right: 4px;
+      text-align: right;
+   }
+
+}
+
 @media (min-width: 992px) {
 
    /* Adapt to layout where the input form is to the left
@@ -315,6 +423,44 @@
       margin-top: 0;
    }
 
+   div#hdr-1 {
+      float: left;
+   }
+
+   div#hdr-2b {
+      display: inline-block;
+      margin-left: 16px;
+      margin-top: 40px;
+      margin-bottom: 0px;
+   }
+
+   div#hdr-2b h3::before {
+      content: "\25A0\00A0\00A0"; /* Black square */
+   }
+
+   div#hdr-3 {
+      vertical-align: bottom;
+   }
+
+   div#hdr-5 {
+      top: auto;
+      bottom: 16px;
+      right: 12px;
+   }
+
+}
+
+@media (min-width:992px) and (max-width:1199px) {
+   
+   #label-numpmt::before {
+      content: "Fjöldi afborgana (480 ef 40 ár)";
+   }
+
+   .byline::before {
+      white-space: pre;
+      content: "eftir Vilhjálm\0aÞorsteinsson";
+   }
+
 }
 
 </style>
@@ -326,15 +472,21 @@
    <div class="container" role="main">
 
       <div class="row" id="header">
-         <div class="col-xs-12 col-sm-7">
+         <div id="hdr-1">
             <h2>Lánið mitt</h2>
+         </div>
+         <div id="hdr-2a">
             <h3>Verðtryggt jafngreiðslulán<br>sett fram myndrænt</h3>
          </div>
-         <div class="col-xs-12 col-sm-5">
-            <h3 align="right"><small>eftir
-            Vilhjálm Þorsteinsson</small><span class="hidden-xs"><br>
-            <img src="assets/img/2325.jpg" width="80" height="97"
-            class="img-rounded"></span></h3>
+         <div id="hdr-2b">
+            <h3>Verðtryggt jafngreiðslulán sett fram myndrænt</h3>
+         </div>
+         <div id="hdr-5">
+            <div id="hdr-3">
+               <h3 class="byline"></h3>
+            </div>
+            <div id="hdr-4"><img src="assets/img/2325.jpg"
+               width="40" height="48" class="img-rounded"></div>
          </div>
       </div>
 
@@ -391,7 +543,7 @@
                      </div>
                      <div class="col-xs-12 col-sm-6 col-md-12">
                         <div id="numpmt-status" class="form-group label-floating">
-                           <label for="numpmt" class="control-label">Fjöldi afborgana (480 ef 40 ár, 300 ef 25 ár)</label>
+                           <label for="numpmt" id="label-numpmt" class="control-label"></label>
                            <input type="text" name="numpmt" id="numpmt" value="480"
                               maxlength="3" class="form-control">
                            <span class="form-control-feedback"></span>
@@ -797,9 +949,9 @@
          checkAndUpdate(false);
       }
 
-      function mediaMinWidth768(mql) {
+      function mediaMinWidth992(mql) {
          if (mql.matches) {
-            // Take action when min-width exceeds 768
+            // Take action when min-width exceeds 992
             narrowUI = false;
          }
          else {
@@ -807,12 +959,23 @@
          }
       }
 
+      function mediaMinWidth1200(mql) {
+         if (mql.matches) {
+            // Take action when min-width exceeds 1200
+         }
+      }
+
       function initMediaListener() {
          // Install listener functions for media changes
-         var mql = window.matchMedia("(min-width: 768px)");
+         var mql = window.matchMedia("(min-width: 992px)");
          if (mql) {
-            mediaMinWidth768(mql);
-            mql.addListener(mediaMinWidth768);
+            mediaMinWidth992(mql);
+            mql.addListener(mediaMinWidth992);
+         }
+         mql = window.matchMedia("(min-width: 1200px)");
+         if (mql) {
+            mediaMinWidth1200(mql);
+            mql.addListener(mediaMinWidth1200);
          }
       }
 
