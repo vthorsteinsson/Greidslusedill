@@ -616,8 +616,6 @@ function displayLoan(ctx) {
    $("#result-total").text(toCurrency(ctx.payment * ctx.n));
    var totalNow = ctx.payment * ctx.n * vnvLast / ctx.baseVNV;
    $("#result-total-now").text(toCurrency(totalNow));
-   // Display cost of using wrong (r/12) monthly interest?
-   $("li#wrong-cost").css("display", ctx.wrong ? "list-item" : "none");
    $("#result-interest-nominal").text(toFixed(ctx.interest, 2));
    var yCorrect = annuity(ctx.amount, ctx.n, 12, ctx.interest, true);
    var totalCorrect = yCorrect * ctx.n * vnvLast / ctx.baseVNV;
@@ -652,7 +650,7 @@ function displayPayments(ctx) {
                   .attr("colspan", "7")
                   .append($("<button>")
                      .attr("type", "submit")
-                     .attr("class", "btn btn-danger")
+                     .attr("class", "btn btn-info")
                      .text(" Smelltu hér til að sjá alla gjalddaga")
                      .prepend($("<i>")
                         .attr("class", "material-icons")
@@ -699,6 +697,87 @@ function displayGraphs(ctx) {
    displayPaymentGraph(ctx, true);
    // Initialize the select control for inflation premises
    setInflationOptions("#inflation-future", ctx.annualInflation);
+   // Display ratio graphs
+   displayRatioGraphs(ctx);
+}
+
+function displayRatioGraph(id, cls, item1, item2, text1, text2, unit, decimals) {
+   // Display a graph of ratios between two numbers
+   var $canvas = $("#" + id);
+   var HEIGHT = 100;
+   var margin = { top: 10, right: 10, bottom: 10, left: 10 },
+      width = $canvas.width() - margin.right - margin.left,
+      height = HEIGHT - margin.top - margin.bottom;
+   // The graphics canvas
+   $canvas.html("");
+
+   var g = d3.select("#" + id)
+      .append("svg")
+         .attr("width", width + margin.right + margin.left)
+         .attr("height", height + margin.top + margin.bottom)
+      .append("g")
+         .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+   // Color the graph background
+   g.append("rect")
+      .attr("class", "background")
+      .attr("x", -margin.left)
+      .attr("y", -margin.top)
+      .attr("width", width + margin.left + margin.right)
+      .attr("height", height + margin.top + margin.bottom);
+
+   var x = d3.scaleLinear()
+      .domain([0, d3.max([item1, item2])])
+      .range([0, width]);
+
+   var a = [ { data: item1, text: text1 }, { data: item2, text: text2 } ];
+
+   // Draw two horizontal bars
+   var bars = g.selectAll("rect.ratio." + cls)
+      .data(a)
+      .enter();
+   bars
+      .append("rect")
+         .attr("class", function(d, i) { return "ratio " + cls + " r" + (i + 1); })
+         .attr("x", function(d) { return x(0); })
+         .attr("width", function(d) { return x(d.data); })
+         .attr("y", function(d, i) { return 40 * i; })
+         .attr("height", function(d, i) { return 40; });
+   bars
+      .append("text")
+         .attr("class", "ratio")
+         .attr("x", function(d) { return x(0) + 12; })
+         .attr("y", function(d, i) { return 40 * i + 4; })
+         .attr("dy", "1.6em")
+         .text(function(d) {
+            return d.text + ": " +
+               (decimals > 0 ? toFixed(d.data, decimals) : toCurrency(d.data)) +
+               (unit ? " " + unit : "");
+         });
+
+}
+
+function displayRatioGraphs(ctx) {
+   displayRatioGraph("canvas-ratio-1", "vnv",
+      ctx.baseVNV,
+      vnvLast,
+      "Upphafleg vísitala neysluverðs",
+      "Vísitala neysluverðs núna", "", 1);
+   displayRatioGraph("canvas-ratio-2", "principal",
+      ctx.amount,
+      ctx.amount * vnvLast / ctx.baseVNV,
+      "Upphaflegur höfuðstóll lánsins",
+      "Höfuðstóllinn á núverandi verðlagi", "kr.", 0);
+   displayRatioGraph("canvas-ratio-3", "payment",
+      ctx.payment,
+      ctx.payment * vnvLast / ctx.baseVNV,
+      "Jafngreiðsla á upphaflegu verðlagi",
+      "Jafngreiðsla á núverandi verðlagi", "kr.", 0);
+   displayRatioGraph("canvas-ratio-4", "repayment",
+      ctx.payment * ctx.n,
+      ctx.payment * ctx.n * vnvLast / ctx.baseVNV,
+      "Endurgreiðslur á upphaflegu verðlagi",
+      "Endurgreiðslur á núverandi verðlagi", "kr.", 0);
 }
 
 function displayPrincipalGraph(ctx, inflated) {
@@ -856,10 +935,10 @@ function displayPrincipalGraph(ctx, inflated) {
       makeBars("principal", "po", function(d) { return d.amt; }, false);
       // Modify the inflation premise text
       if (ctx.futureInflation == 0.0)
-         $("span.inflation-premise").text("Frá deginum í dag er lánið sýnt án verðbólgu.")
+         $("span.inflation-premise").text("Frá deginum í dag er lánið sýnt án verðbólgu")
       else
          $("span.inflation-premise").text("Frá deginum í dag er reiknað með " +
-            toFixed(ctx.futureInflation, 2) + "% árlegri verðbólgu.");
+            toFixed(ctx.futureInflation, 2) + "% árlegri verðbólgu");
    }
 
 }
