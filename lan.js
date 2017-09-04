@@ -209,11 +209,17 @@ function calcLoan(amount, interest, n, wrong, year, month, futureInflation) {
    var G = amount;
    // Annuity payment
    ctx.payment = annuity(amount, n, 12, interest, !wrong);
-   // Fill in informational fields
+   // Inflation calculations
    ctx.months = (yearLast - year) * 12 + monthLast - (month - 1) + 1;
    ctx.monthlyInflation = ctx.months > 0 ?
       Math.pow(vnvLast / ctx.baseVNV, (1 / ctx.months)) : 1.0;
    ctx.annualInflation = (Math.pow(ctx.monthlyInflation, 12) - 1) * 100;
+   // Amount already paid and left to be paid
+   ctx.monthsPaid = Math.min(ctx.months, n);
+   ctx.monthsLeft = n - ctx.monthsPaid;
+   ctx.amountPaid = ctx.monthsPaid * ctx.payment;
+   ctx.amountLeft = ctx.monthsLeft * ctx.payment;
+   ctx.amountNow = 0.0;
    // Generate all payments as well as a final sentinel state
    // with amt == newAmt == 0
    var a = [];
@@ -223,6 +229,10 @@ function calcLoan(amount, interest, n, wrong, year, month, futureInflation) {
       var thisMonth = month - 1 + i;
       var thisYear = year + Math.floor(thisMonth / 12);
       thisMonth %= 12;
+      if (thisYear == yearLast && thisMonth == monthLast)
+         // Remember the principal as it stands now
+         // (after the last available index period)
+         ctx.amountNow = nG;
       var vnv = lookupVNV(thisYear, thisMonth, 0, ctx.futureInflation) || 100.0;
       a.push(
          {
@@ -254,15 +264,30 @@ function displayLoan(ctx) {
    $(".result-inflation").text(toFixed(ctx.annualInflation, 2));
    $(".result-pmt").text(toCurrency(ctx.payment));
    $(".result-pmt-now").text(toCurrency(ctx.payment * vnvLast / ctx.baseVNV));
+   // Months and amounts paid and remaining
+   $(".result-months-paid").text(toFixed(ctx.monthsPaid, 0));
+   $(".result-months-left").text(toFixed(ctx.monthsLeft, 0));
+   $(".result-amount-paid").text(toCurrency(ctx.amountPaid));
+   $(".result-amount-left").text(toCurrency(ctx.amountLeft));
+   $(".result-inflated-paid").text(toCurrency(ctx.amountPaid * vnvLast / ctx.baseVNV));
+   $(".result-inflated-left").text(toCurrency(ctx.amountLeft * vnvLast / ctx.baseVNV));
    // Show principal
    $("#result-principal").text(toCurrency(ctx.amount));
+   $(".result-principal-now").text(toCurrency(ctx.amountNow));
+   // Hide the past-future legend if the loan is not currently open
+   $("#legend-principal").css("display", ctx.monthsLeft > 0 ? "block" : "none");
    var principalNow = ctx.amount * vnvLast / ctx.baseVNV;
    $("#result-principal-now").text(toCurrency(principalNow));
+   // Hide the past-future legend if the loan is not currently open
+   $("#legend-inflated").css("display", ctx.monthsLeft > 0 ? "block" : "none");
+   var amountNow = ctx.amountNow * vnvLast / ctx.baseVNV;
+   $(".result-inflated-now").text(toCurrency(amountNow));
    // Show total amount repaid
    $("#result-total").text(toCurrency(ctx.payment * ctx.n));
    var totalNow = ctx.payment * ctx.n * vnvLast / ctx.baseVNV;
    $("#result-total-now").text(toCurrency(totalNow));
    $("#result-interest-nominal").text(toFixed(ctx.interest, 2));
+   $(".legend-amort").css("display", ctx.monthsLeft > 0 ? "block" : "none");
    var yCorrect = annuity(ctx.amount, ctx.n, 12, ctx.interest, true);
    var totalCorrect = yCorrect * ctx.n * vnvLast / ctx.baseVNV;
    $("#result-total-correct").text(toCurrency(totalCorrect));
@@ -350,8 +375,10 @@ function displayGraphs(ctx) {
 function displayRatioGraph(id, cls, item1, item2, text1, text2, unit, decimals) {
    // Display a graph of ratios between two numbers
    var $canvas = $("#" + id);
-   var HEIGHT = 100;
-   var margin = { top: 10, right: 10, bottom: 10, left: 10 },
+   var MARGIN = 10;
+   var BAR_HEIGHT = 30;
+   var HEIGHT = 2 * MARGIN + 2 * BAR_HEIGHT;
+   var margin = { top: MARGIN, right: 10, bottom: MARGIN, left: 10 },
       width = $canvas.width() - margin.right - margin.left,
       height = HEIGHT - margin.top - margin.bottom;
    // The graphics canvas
@@ -387,14 +414,14 @@ function displayRatioGraph(id, cls, item1, item2, text1, text2, unit, decimals) 
          .attr("class", function(d, i) { return "ratio " + cls + " r" + (i + 1); })
          .attr("x", function(d) { return x(0); })
          .attr("width", function(d) { return x(d.data); })
-         .attr("y", function(d, i) { return 40 * i; })
-         .attr("height", function(d, i) { return 40; });
+         .attr("y", function(d, i) { return BAR_HEIGHT * i; })
+         .attr("height", function(d, i) { return BAR_HEIGHT; });
    bars
       .append("text")
          .attr("class", "ratio")
          .attr("x", function(d) { return x(0) + 12; })
-         .attr("y", function(d, i) { return 40 * i + 4; })
-         .attr("dy", "1.6em")
+         .attr("y", function(d, i) { return BAR_HEIGHT * i; })
+         .attr("dy", "1.5em")
          .text(function(d) {
             return d.text + ": " +
                (decimals > 0 ? toFixed(d.data, decimals) : toCurrency(d.data)) +
@@ -434,8 +461,8 @@ function displayPrincipalGraph(ctx, inflated) {
    var canvasId = inflated ? "#canvas-inflated" : "#canvas-principal";
    // Determine the drawing surface
    var $canvas = $(canvasId);
-   var HEIGHT = inflated ? 320 : 300;
-   var margin = { top: 30, right: 20, bottom: 20, left: 50 },
+   var HEIGHT = inflated ? 300 : 280;
+   var margin = { top: 10, right: 20, bottom: 20, left: 50 },
       width = $canvas.width() - margin.right - margin.left,
       height = HEIGHT - margin.top - margin.bottom;
    // The graphics canvas
@@ -597,8 +624,8 @@ function displayPaymentGraph(ctx, inflated) {
 
    // Determine the drawing surface
    var $canvas = $(canvasId);
-   var HEIGHT = inflated ? 320 : 300;
-   var margin = { top: 30, right: 20, bottom: 20, left: 50 },
+   var HEIGHT = inflated ? 300 : 280;
+   var margin = { top: 10, right: 20, bottom: 20, left: 50 },
       width = $canvas.width() - margin.right - margin.left,
       height = HEIGHT - margin.top - margin.bottom;
    // The graphics canvas
@@ -765,7 +792,7 @@ function displayPaymentGraph(ctx, inflated) {
 
    // Draw the interest legend in the upper left corner
    g.append("g")
-      .attr("class", "legend-interest")
+      .attr("class", "text-interest")
       .append("text")
          .attr("x", 24)
          .attr("y", y(totalFunc(a[0])) + 8)
@@ -774,7 +801,7 @@ function displayPaymentGraph(ctx, inflated) {
 
    // Draw the amortization legend in the lower right corner
    g.append("g")
-      .attr("class", "legend-amort")
+      .attr("class", "text-amort")
       .append("text")
          .attr("x", width - 24)
          .attr("y", y(0) - 52)
@@ -789,8 +816,8 @@ function displayInflationGraph(ctx, inverse) {
    var barId = inverse ? "inv" : "infl";
    // Determine the drawing surface
    var $canvas = $(canvasId);
-   var HEIGHT = 250;
-   var margin = { top: 30, right: 20, bottom: 20, left: 50 },
+   var HEIGHT = 230;
+   var margin = { top: 10, right: 20, bottom: 20, left: 50 },
       width = $canvas.width() - margin.right - margin.left,
       height = HEIGHT - margin.top - margin.bottom;
    // The graphics canvas
