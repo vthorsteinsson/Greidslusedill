@@ -25,11 +25,20 @@ var monthNow = now.getMonth(); // 0-based
 
 // The last year and month for which index data is available
 var keyLast;
-for (var key in vis)
+// The first year and month for which housing price index data is available
+var keyVhFirst;
+for (var key in vis) {
    if (keyLast === undefined || key > keyLast)
       keyLast = key;
+   if (vis[key].vh !== undefined) {
+      if (keyVhFirst === undefined || key < keyVhFirst)
+         keyVhFirst = key;
+   }
+}
 var yearLast = parseInt(keyLast.slice(0, 4));
 var monthLast = parseInt(keyLast.slice(-2)) - 1;
+var yearVhFirst = parseInt(keyVhFirst.slice(0, 4));
+var monthVhFirst = parseInt(keyVhFirst.slice(-2)) - 1;
 var vnvLast = vis[keyLast].vnv;
 var vhLast = vis[keyLast].vh;
 
@@ -42,6 +51,8 @@ var vhLast = vis[keyLast].vh;
 var reCurrency = /(?:^(\d+)$)|(?:^\d{1,3}(?:\.\d\d\d)*$)|(?:^\d{1,3}(?:\,\d\d\d){2,}$)/;
 var reInteger = /^[1-9]\d{0,2}$/;
 var rePercent = /^\d{1,2}(?:[\.\,]\d{1,2})?$/;
+
+var TOOLTIP_HEIGHT = 48; // Tooltip hover distance above datapoint
 
 
 function asCurrency(str) {
@@ -120,18 +131,32 @@ function keyYM (year, month) {
 }
 
 function lookupVNV(year, month, offset, futureInflation) {
-   // Return the inflation index for the given year and month (0-based)
+   // Lookup consumer price index
+   return lookupVis(year, month, offset,
+      vnvLast, futureInflation,
+      function(d) { return d.vnv; });
+}
+
+function lookupVH(year, month, offset, futureInflation) {
+   // Lookup housing price index
+   return lookupVis(year, month, offset,
+      vhLast, futureInflation,
+      function(d) { return d.vh; });
+}
+
+function lookupVis(year, month, offset, indexLast, futureInflation, dataFunc) {
+   // Return the index for the given year and month (0-based)
    // First, apply the offset
    var last = yearLast * 12 + monthLast;
    var i = year * 12 + month + (offset || 0);
    year = Math.floor(i / 12);
    month = i % 12;
    if (i <= last)
-      // Past VNV: look it up in the table
-      return vis[keyYM(year, month)].vnv;
-   // Future VNV: use the last available VNV plus future inflation
+      // Past index value: look it up in the table
+      return dataFunc(vis[keyYM(year, month)]) || 100.0;
+   // Future index: use the last available index plus future inflation
    var f = (futureInflation || 0.0) / 100;
-   return vnvLast * Math.pow(1 + f, (i - last) / 12);
+   return indexLast * Math.pow(1 + f, (i - last) / 12);
 }
 
 function setInflationOptions(id, inflSoFar) {
@@ -288,6 +313,8 @@ function displayLoan(ctx) {
    $("#result-total-now").text(toCurrency(totalNow));
    $("#result-interest-nominal").text(toFixed(ctx.interest, 2));
    $(".legend-amort").css("display", ctx.monthsLeft > 0 ? "block" : "none");
+   // Hide the future inflation select box if the loan is not currently open
+   $("#inflation-div").css("display", ctx.monthsLeft > 0 ? "block" : "none");
    var yCorrect = annuity(ctx.amount, ctx.n, 12, ctx.interest, true);
    var totalCorrect = yCorrect * ctx.n * vnvLast / ctx.baseVNV;
    $("#result-total-correct").text(toCurrency(totalCorrect));
@@ -427,7 +454,6 @@ function displayRatioGraph(id, cls, item1, item2, text1, text2, unit, decimals) 
                (decimals > 0 ? toFixed(d.data, decimals) : toCurrency(d.data)) +
                (unit ? " " + unit : "");
          });
-
 }
 
 function displayRatioGraphs(ctx) {
@@ -576,7 +602,7 @@ function displayPrincipalGraph(ctx, inflated) {
                      toCurrency(valueFunc(d)) + "<br>");
                tooltip
                   .style("left", (x(d.date) + widthFunc(d, i) / 2 + margin.left - 23) + "px")
-                  .style("top", (y(valueFunc(d)) - 30) + "px");
+                  .style("top", (y(valueFunc(d)) - TOOLTIP_HEIGHT) + "px");
                if (inflated) {
                   // Also highlight the same month on the inverse inflation graph
                   $("#inv-" + keyYM(d.year, d.month)).addClass("hover");
@@ -613,7 +639,6 @@ function displayPrincipalGraph(ctx, inflated) {
          $("span.inflation-premise").text("Frá deginum í dag er reiknað með " +
             toFixed(ctx.futureInflation, 2) + "% árlegri verðbólgu");
    }
-
 }
 
 function displayPaymentGraph(ctx, inflated) {
@@ -737,7 +762,7 @@ function displayPaymentGraph(ctx, inflated) {
             .html("<b>" + monthsUC[d.month] + " " + d.year + "</b><br>" + toCurrency(amortFunc(d)) + "<br>");
          tooltip
             .style("left", (x(d.date) + widthFunc(d, i) / 2 + margin.left - 23) + "px")
-            .style("top", (y(amortFunc(d)) - 30) + "px");
+            .style("top", (y(amortFunc(d)) - TOOLTIP_HEIGHT) + "px");
          if (inflated)
             // Also highlight the same month on the inverse inflation graph
             $("#inv-" + keyYM(d.year, d.month)).addClass("hover");
@@ -776,7 +801,7 @@ function displayPaymentGraph(ctx, inflated) {
             .html("<b>" + monthsUC[d.month] + " " + d.year + "</b><br>" + toCurrency(interestFunc(d)) + "<br>");
          tooltip
             .style("left", (x(d.date) + widthFunc(d, i) / 2 + margin.left - 23) + "px")
-            .style("top", (y(totalFunc(d)) - 30) + "px");
+            .style("top", (y(totalFunc(d)) - TOOLTIP_HEIGHT) + "px");
          if (inflated)
             // Also highlight the same month on the inverse inflation graph
             $("#inv-" + keyYM(d.year, d.month)).addClass("hover");
@@ -928,7 +953,7 @@ function displayInflationGraph(ctx, inverse) {
             .html("<b>" + monthsUC[d.month] + " " + d.year + "</b><br>" + toCurrency(d.vnvRel) + "<br>");
          tooltip
             .style("left", (x(d.date) + widthFunc(d, i) / 2 + margin.left - 23) + "px")
-            .style("top", (y(d.vnvRel) - 30) + "px");
+            .style("top", (y(d.vnvRel) - TOOLTIP_HEIGHT) + "px");
       })
       .on("mouseout", function(d) {
          tooltip.transition()
