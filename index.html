@@ -249,6 +249,14 @@
       fill: lightcoral;
    }
 
+   .bar.cost.neg {
+      fill: seagreen;
+   }
+
+   .bar.cost.neg.past {
+      fill: mediumseagreen;
+   }
+
    .bar.infl {
       fill: gold;
    }
@@ -280,13 +288,24 @@
    .bar.hover,
    .bar.principal.hover,
    .bar.principal.past.hover,
+   .bar.loan.hover,
+   .bar.loan.past.hover,
    .bar.equity.hover,
+   .bar.equity.neg.hover,
    .bar.equity.past.hover,
    .bar.equity.past.neg.hover,
+   .bar.cost.hover,
+   .bar.cost.neg.hover,
+   .bar.cost.past.hover,
+   .bar.cost.past.neg.hover,
    .bar.principal:hover,
    .bar.inflated:hover,
    .bar.infl:hover,
    .bar.equity:hover,
+   .bar.equity.neg:hover,
+   /* .bar.loan:hover, */
+   .bar.cost:hover,
+   .bar.cost.neg:hover,
    .bar.amort:hover,
    .bar.interest:hover {
       fill: orange;
@@ -419,6 +438,14 @@
 
    span#patch-inflated-future {
       background-color: mediumorchid;
+   }
+
+   span#patch-rent-negative {
+      background-color: tomato;
+   }
+
+   span#patch-rent-positive {
+      background-color: seagreen;
    }
 
    p.legend img {
@@ -734,7 +761,7 @@
                         </div>
                         <div class="col-xs-12" id="legend-principal">
                            <p class="legend"><span class="patch" id="patch-principal-past"></span>
-                              Fortíð (eftirstöðvar nú <b><span class="result-inflated-now"></span></b> kr.)
+                              Fortíð (eftirstöðvar nú <b><span class="result-now"></span></b> kr.)
                               <span class="patch" id="patch-principal-future"></span>
                               Framtíð</p>
                         </div>
@@ -1027,23 +1054,34 @@
                               height="18">Eigið fé</p>
                         </div>
                         <div class="col-xs-12">
-                           <p>Bera má kaup á fasteign saman við leigu. Þannig má til dæmis
-                           leggja saman greidda vexti og virðisaukningu
-                           eða virðisrýrnun eignarinnar tilteknu tímabili, og deila með lengd tímabilsins
-                           til að finna nokkurs konar <b>innri húsaleigu</b>.</p>
-                           <p>Á þessu grafi sjást uppsafnaðir greiddir vextir frá upphafi lánsins
-                           ásamt virðisaukningu eða virðisrýrnun (bláa línan).</p>
-                           <p><i>Farðu með músina yfir grafið til að sjá jafngildi húsaleigu
-                           frá upphafi lánsins.</i></p>
+                           <p>Bera má kaup á fasteign saman við leigu. Ein leið til þess er að
+                           leggja saman greidda vexti og draga frá þeim virðisaukningu
+                           eignarinnar (eða leggja við virðisrýrnun) á tilteknu tímabili,
+                           og deila með lengd tímabilsins
+                           til að finna nokkurs konar <b>innri leigu</b>. (Hér vantar að sjálfsögðu
+                           inn í myndina aðra kostnaðarliði svo sem viðhald og skatta.) Ef virði
+                           eignarinnar breyttist ekki allan lánstímann væri þessi innri leiga
+                           heildarvextir lánsins deilt með fjölda mánaða, eða
+                           <b><span class="result-inner-rent"></span></b> kr. á mánuði að meðaltali.</p>
+                           <p>Á þessu grafi sjást, fyrir hvern mánuð, uppsafnaðir greiddir
+                           vextir frá upphafi lánsins að frádreginni virðisaukningu (eða viðbættri
+                           virðisrýrnun) til sama tíma. Ef sú upphæð er í plús (þú hefur
+                           greitt innri leigu til þess tíma) eru súlurnar
+                           <span style="color:tomato; font-weight:500">rauðar</span>, en ef hún er í
+                           mínus (þú hefur fengið greidda innri leigu) eru súlurnar
+                           <span style="color:seagreen; font-weight:500">grænar</span>.</p>
+                           <p><b>Grafið er allt á verðlagi dagsins í dag.</b>
+                           <i>Farðu með músina yfir grafið til að sjá innri leigu á
+                           mánuði að jafnaði frá upphafi lánsins.</i></p>
                         </div>
                         <div class="col-xs-12" id="canvas-rent">
                            <!-- SVG stuff is inserted here -->
                         </div>
                         <div class="col-xs-12" id="legend-rent">
-                           <p class="legend"><span class="patch" id="patch-outcome-asset"></span>
-                              Andvirði fasteignar
-                              <span class="patch" id="patch-outcome-liability"></span>
-                              Eftirstöðvar lánsins</p>
+                           <p class="legend"><span class="patch" id="patch-rent-negative"></span>
+                              Greidd innri leiga
+                              <span class="patch" id="patch-rent-positive"></span>
+                              Fengin innri leiga</p>
                         </div>
                      </div>
                   </div>

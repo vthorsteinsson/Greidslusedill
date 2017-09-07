@@ -324,6 +324,7 @@ function displayLoan(ctx) {
    // Show principal
    $(".result-principal").text(toCurrency(ctx.amount));
    $(".result-principal-now").text(toCurrency(ctx.amountStart));
+   $(".result-now").text(toCurrency(ctx.amountNow));
    // Amount owed as it currently stands
    var inflatedNow = ctx.amountNow * vnvLast / ctx.baseVNV;
    $(".result-inflated-now").text(toCurrency(inflatedNow));
@@ -336,9 +337,13 @@ function displayLoan(ctx) {
    // Hide the past-future legend if the loan is not currently open
    $("#legend-inflated").css("display", ctx.monthsLeft > 0 ? "block" : "none");
    // Show total amount repaid
-   $("#result-total").text(toCurrency(ctx.payment * ctx.n));
-   var totalNow = ctx.payment * ctx.n * vnvLast / ctx.baseVNV;
+   var totalRepaid = ctx.payment * ctx.n;
+   $("#result-total").text(toCurrency(totalRepaid));
+   var totalNow = totalRepaid * vnvLast / ctx.baseVNV;
    $("#result-total-now").text(toCurrency(totalNow));
+   // Inner rent
+   $(".result-inner-rent").text(toCurrency((totalNow - ctx.amountStart) / ctx.n));
+   // Nominal interest
    $("#result-interest-nominal").text(toFixed(ctx.interest, 2));
    $(".legend-amort").css("display", ctx.monthsLeft > 0 ? "block" : "none");
    // Hide the future inflation select box if the loan is not currently open
@@ -1062,10 +1067,7 @@ function displayOutcomeGraph(ctx, showRent) {
          .text("m.kr.");
 
    var yExtent = showRent ?
-      [
-         d3.min(a, function(d) { return Math.min(d.apprNow, d.interestNow); }),
-         d3.max(a, function(d) { return Math.max(d.apprNow, d.interestNow); })
-      ] :
+      d3.extent(a, function(d) { return d.interestNow - d.apprNow; }) :
       [0, d3.max(a, function(d) { return Math.max(d.valueNow, d.amtNow); })];
    var y = d3.scaleLinear()
       .domain(yExtent)
@@ -1114,8 +1116,7 @@ function displayOutcomeGraph(ctx, showRent) {
                .duration(100)
                .style("opacity", .8);
             tooltipText
-               .html("<b>" + monthsUC[d.month] + " " + d.year + "</b><br>" +
-                  tooltipFunc(d) + "<br>");
+               .html(tooltipFunc(d));
             tooltip
                .style("left", (x(d.date) + widthFunc(d, i) / 2 + margin.left - 23) + "px")
                .style("top", (y(tooltipLocFunc(d)) - TOOLTIP_HEIGHT_2) + "px");
@@ -1154,17 +1155,18 @@ function displayOutcomeGraph(ctx, showRent) {
    };
 
    if (showRent) {
-      // Draw bars for total amount paid and owed at each point in time
+      // Draw bars for total cost of loan (interest - value appreciation)
       drawBars("cost", null,
-         function(d) { return d.interestNow; }, // topFunc
+         function(d) { return d.interestNow - d.apprNow; }, // topFunc
          function(d) { return 0; }, // bottomFunc
-         function(d) { return d.interestNow; },
+         function(d) { return Math.max(0, d.interestNow - d.apprNow); }, // tooltipLoc
          function(d) {
             // Tooltip text
             var rent = 0.0;
             if (d.ix > 1)
                rent = (d.interestNow - d.apprNow) / (d.ix - 1);
-            return "Húsaleiga:<br>" + toCurrency(rent);
+            return "Leiga til<br><b>" + months[d.month] + " " + d.year + "</b>:<br>"
+               + toCurrency(rent) + "<br>";
          }
       );
    }
@@ -1174,7 +1176,9 @@ function displayOutcomeGraph(ctx, showRent) {
       var tooltipTextFunc =
          function(d) {
             // Tooltip text
-            return "Eigið fé:<br>" + toCurrency(d.valueNow - d.amtNow);
+            return "<b>" + monthsUC[d.month] + " " + d.year +
+               "</b><br>Eigið fé:<br>" +
+               toCurrency(d.valueNow - d.amtNow) + "<br>";
          };
       drawBars("loan", "equity",
          function(d) { return d.amtNow; }, // topFunc
@@ -1188,15 +1192,15 @@ function displayOutcomeGraph(ctx, showRent) {
          tooltipLocFunc,
          tooltipTextFunc
       );
+      // Draw valuation line on top
+      var line = d3.line()
+         .curve(d3.curveCatmullRom) // Smoothing algorithm
+         .x(function(d) { return x(d.date); })
+         .y(function(d) { return y(d.valueNow); });
+      g.append("path")
+         .attr("class", "line")
+         .attr("d", line(a));
    }
 
-   // Draw valuation line on top
-   var line = d3.line()
-      .curve(d3.curveCatmullRom) // Smoothing algorithm
-      .x(function(d) { return x(d.date); })
-      .y(function(d) { return y(showRent ? d.apprNow : d.valueNow); });
-   g.append("path")
-      .attr("class", "line")
-      .attr("d", line(a));
 }
 
