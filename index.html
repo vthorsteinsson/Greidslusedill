@@ -33,7 +33,7 @@
 
 <link href="https://fonts.googleapis.com/icon?family=Material+Icons"
    rel="stylesheet" />
-<link href='https://fonts.googleapis.com/css?family=Roboto:300,400,500,700'
+<link href='https://fonts.googleapis.com/css?family=Roboto:300,300i,400,500,700'
    rel='stylesheet'>
 <link href="https://maxcdn.bootstrapcdn.com/font-awesome/latest/css/font-awesome.min.css"
    rel="stylesheet" />
@@ -199,6 +199,12 @@
       fill: whitesmoke;
    }
 
+   path.line {
+      fill: none;
+      stroke: steelblue;
+      stroke-width: 3px;
+   }
+
    .bar {
       stroke-width: 0;
    }
@@ -211,27 +217,35 @@
       fill: skyblue;
    }
 
-   .bar.inflated {
+   .bar.inflated,
+   .bar.loan {
       fill: mediumorchid;
    }
 
-   .bar.inflated.past {
+   .bar.inflated.past,
+   .bar.loan.past {
       fill: plum;
    }
 
-   .bar.amort {
+   .bar.amort,
+   .bar.equity {
       fill: seagreen;
    }
 
-   .bar.amort.past {
+   .bar.amort.past,
+   .bar.equity.past {
       fill: mediumseagreen;
    }
 
-   .bar.interest {
+   .bar.interest,
+   .bar.cost,
+   .bar.equity.neg {
       fill: tomato;
    }
 
-   .bar.interest.past {
+   .bar.interest.past,
+   .bar.cost.past,
+   .bar.equity.neg.past {
       fill: lightcoral;
    }
 
@@ -266,9 +280,13 @@
    .bar.hover,
    .bar.principal.hover,
    .bar.principal.past.hover,
-   .bar:hover,
+   .bar.equity.hover,
+   .bar.equity.past.hover,
+   .bar.equity.past.neg.hover,
    .bar.principal:hover,
    .bar.inflated:hover,
+   .bar.infl:hover,
+   .bar.equity:hover,
    .bar.amort:hover,
    .bar.interest:hover {
       fill: orange;
@@ -394,7 +412,8 @@
       background-color: steelblue;
    }
 
-   span#patch-inflated-past {
+   span#patch-inflated-past,
+   span#patch-outcome-debt {
       background-color: plum;
    }
 
@@ -413,6 +432,10 @@
 
    p.legend.right img {
       margin-left: 0px;
+   }
+
+   div#legend-outcome {
+      margin-bottom: 12px;
    }
 
 @media (min-width: 321px) {
@@ -703,15 +726,15 @@
                            <p>Hér er jafngreiðslulánið þitt eins og upphaflega var til þess stofnað.
                            Á grafinu sjást eftirstöðvar lánsins lækka með
                            tíma, <b>á upphaflegu verðlagi þess</b>, hægt fyrst en svo hraðar í lokin.
-                           Farðu með músina yfir grafið til að sjá upphæðina í byrjun
-                           hvers mánaðar.</p>
+                           <i>Farðu með músina yfir grafið til að sjá upphæðina í byrjun
+                           hvers mánaðar.</i></p>
                         </div>
                         <div class="col-xs-12" id="canvas-principal">
                            <!-- SVG stuff is inserted here -->
                         </div>
                         <div class="col-xs-12" id="legend-principal">
                            <p class="legend"><span class="patch" id="patch-principal-past"></span>
-                              Fortíð (eftirstöðvar nú <b><span class="result-principal-now"></span></b> kr.)
+                              Fortíð (eftirstöðvar nú <b><span class="result-inflated-now"></span></b> kr.)
                               <span class="patch" id="patch-principal-future"></span>
                               Framtíð</p>
                         </div>
@@ -732,7 +755,7 @@
                            <p>Hér sjást afborganir og vextir jafngreiðslulánsins, <b>á upphaflegu verðlagi
                            þess</b>. Jafngreiðslan er <b><span class="result-pmt"></span>
                            krónur á mánuði</b>, og skiptist í afborgun og vexti eins og hér sést.
-                           Farðu með músina yfir grafið til að sjá upphæðir hvers mánaðar.</p>
+                           <i>Farðu með músina yfir grafið til að sjá upphæðir hvers mánaðar.</i></p>
                         </div>
                         <div class="col-xs-12" id="canvas-payments">
                            <!-- SVG stuff is inserted here -->
@@ -901,8 +924,8 @@
                            lánið er jafnframt sýnt í bláum lit.
                            <b><span class="inflation-premise">Frá deginum í dag er lánið sýnt
                            án verðbólgu</span>.</b>
-                           Farðu með músina yfir fjólubláa hlutann til að sjá uppreiknaðar
-                           (verðbættar) eftirstöðvar í byrjun hvers mánaðar.</p>
+                           <i>Farðu með músina yfir fjólubláa hlutann til að sjá uppreiknaðar
+                           (verðbættar) eftirstöðvar í byrjun hvers mánaðar.</i></p>
                         </div>
                         <div class="col-xs-12" id="inflation-div">
                            <div class="form-group pull-right">
@@ -942,7 +965,7 @@
                            Jafngreiðslan, sem upphaflega var <b><span class="result-pmt"></span></b> kr.
                            á mánuði, er <b><span class="result-pmt-now"></span></b> kr. á verðlagi
                            dagsins.
-                           Farðu með músina yfir grafið til að sjá upphæðir hvers mánaðar.</p>
+                           <i>Farðu með músina yfir grafið til að sjá upphæðir hvers mánaðar.</i></p>
                         </div>
                         <div class="col-xs-12" id="canvas-payments-inflated">
                            <!-- SVG stuff is inserted here -->
@@ -965,6 +988,67 @@
                </div>
             </div>
 
+            <div class="row result" id="results-outcome">
+               <div class="col-xs-12">
+                  <div class="panel panel-primary">
+                     <div class="panel-heading clickable">
+                        <h3 class="panel-title">Afkoma af láninu</h3>
+                        <span class="pull-right"><i class="glyphicon glyphicon-chevron-up"></i></span>
+                     </div>
+                     <div class="panel-body">
+                        <div class="col-xs-12">
+                           <p>Hér er dregin upp gróf tilgáta um <b>afkomu þína af láninu</b>,
+                           með öllum fyrirvörum um að forsendur eigi við í þínu tilviki.</p>
+                           <p><span style="color:steelblue; font-weight:500">Bláa línan</span> sýnir
+                           <a href="https://www.skra.is/markadurinn/talnaefni/visitolur-kaups-og-leiguverds/" target="_blank">þróun
+                           íbúðaverðs á höfuðborgarsvæðinu</a> síðan lánið
+                           var tekið, á verðlagi dagsins í dag. Hún gefur því vísbendingu um verðmæti
+                           þess hluta fasteignarinnar sem keyptur var fyrir lánið.</p>
+                           <p><span style="color:mediumorchid; font-weight:500">Fjólublái hlutinn</span> sýnir aftur á móti eftirstöðvar lánsins eins
+                           og þær eru hverju sinni, á núverandi verðlagi. Munurinn á honum og bláu
+                           línunni er þá <b>nettó eigið fé þitt vegna lánsins</b>; eign að frádreginni
+                           skuld. Jákvætt eigið fé er sýnt <span style="color:seagreen; font-weight:500">grænt</span>,
+                           en neikvætt <span style="color:tomato; font-weight:500">rautt</span>.
+                           <i>Farðu með músina yfir grafið til að sjá eigið fé
+                           hverju sinni.</i></p>
+                           <p><b>Grafið er allt á verðlagi dagsins í dag.</b> Á því verðlagi er
+                           upphaflegur höfuðstóll lánsins <b><span class="result-principal-now"></span></b> kr.
+                           Eftirstöðvar þess eru í dag <b><span class="result-inflated-now"></span></b> kr.
+                           meðan eignin að baki er <b><span class="result-value-now"></span></b> kr.,
+                           sem þýðir að eigið fé gæti verið <b><span class="result-equity-now"></span></b> kr.
+                           Reiknað er með óbreyttu íbúðaverði frá deginum í dag til framtíðar.</p>
+                        </div>
+                        <div class="col-xs-12" id="canvas-outcome">
+                           <!-- SVG stuff is inserted here -->
+                        </div>
+                        <div class="col-xs-12" id="legend-outcome">
+                           <p class="legend"><span class="patch" id="patch-outcome-debt"></span> Eftirstöðvar
+                              lánsins <img src="assets/img/patch-1.png" width="18"
+                              height="18">Eigið fé</p>
+                        </div>
+                        <div class="col-xs-12">
+                           <p>Bera má kaup á fasteign saman við leigu. Þannig má til dæmis
+                           leggja saman greidda vexti og virðisaukningu
+                           eða virðisrýrnun eignarinnar tilteknu tímabili, og deila með lengd tímabilsins
+                           til að finna nokkurs konar <b>innri húsaleigu</b>.</p>
+                           <p>Á þessu grafi sjást uppsafnaðir greiddir vextir frá upphafi lánsins
+                           ásamt virðisaukningu eða virðisrýrnun (bláa línan).</p>
+                           <p><i>Farðu með músina yfir grafið til að sjá jafngildi húsaleigu
+                           frá upphafi lánsins.</i></p>
+                        </div>
+                        <div class="col-xs-12" id="canvas-rent">
+                           <!-- SVG stuff is inserted here -->
+                        </div>
+                        <div class="col-xs-12" id="legend-rent">
+                           <p class="legend"><span class="patch" id="patch-outcome-asset"></span>
+                              Andvirði fasteignar
+                              <span class="patch" id="patch-outcome-liability"></span>
+                              Eftirstöðvar lánsins</p>
+                        </div>
+                     </div>
+                  </div>
+               </div>
+            </div>
          </div>
 
       </div> <!-- row -->

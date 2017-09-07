@@ -52,7 +52,8 @@ var reCurrency = /(?:^(\d+)$)|(?:^\d{1,3}(?:\.\d\d\d)*$)|(?:^\d{1,3}(?:\,\d\d\d)
 var reInteger = /^[1-9]\d{0,2}$/;
 var rePercent = /^\d{1,2}(?:[\.\,]\d{1,2})?$/;
 
-var TOOLTIP_HEIGHT = 48; // Tooltip hover distance above datapoint
+var TOOLTIP_HEIGHT = 48; // Tooltip hover distance above datapoint (2-line legend)
+var TOOLTIP_HEIGHT_2 = 66; // Tooltip hover distance above datapoint (3-line legend)
 
 
 function asCurrency(str) {
@@ -79,17 +80,15 @@ function asPercent(str) {
 }
 
 function toCurrency(num) {
-   var s = Math.round(num).toFixed(0);
+   var sign = (num < 0) ? "-" : "";
+   var s = Math.round(Math.abs(num)).toFixed(0);
    var a = [];
-   var length = s.length;
-   var i;
-
    // Insert thousand separators
-   for (i = length; (i - 3) > 0; i = i - 3)
+   for (var i = s.length; i > 3; i = i - 3)
       a.push(s.substr(i - 3, 3));
    if (i)
       a.push(s.substr(0, i));
-   return a.reverse().join(".");
+   return sign + a.reverse().join(".");
 }
 
 function toFixed(num, decimals) {
@@ -113,7 +112,7 @@ function toFixed(num, decimals) {
 //       or false (or undefined) if it is calculated
 //       as rp=r/freq. The former method is more
 //       correct mathematically, but the latter is
-//       (alas) sometimes seen in the real world.
+//       (alas) often seen in the real world.
 function annuity(amount, periods, freq, rate, exponential) {
    // r is the compounding interest rate for each period
    var r = exponential ?
@@ -213,8 +212,10 @@ function calcLoan(amount, interest, n, wrong, year, month, futureInflation) {
       wrong : wrong,
       year : year,
       month : month - 1,
-      // Use the inflation index (VNV) of the previous month
-      baseVNV : lookupVNV(year, month - 1, -1) || 100.0,
+      // Use the inflation index (VNV) of the month previous
+      // to the loan origination date
+      baseVNV : lookupVNV(year, month - 1, -1),
+      baseVH : lookupVH(year, month - 1, -1),
       futureInflation : futureInflation || 0.0
    };
 
@@ -229,6 +230,7 @@ function calcLoan(amount, interest, n, wrong, year, month, futureInflation) {
       ctx.monthlyInterest = (Math.pow(1 + interest / 100, 1 / 12) - 1) * 100;
       ctx.effectiveInterest = interest;
    }
+   var inflNow = vnvLast / ctx.baseVNV;
    var r = ctx.monthlyInterest / 100;
    // The running principal amount
    var G = amount;
@@ -237,17 +239,21 @@ function calcLoan(amount, interest, n, wrong, year, month, futureInflation) {
    // Inflation calculations
    ctx.months = (yearLast - year) * 12 + monthLast - (month - 1) + 1;
    ctx.monthlyInflation = ctx.months > 0 ?
-      Math.pow(vnvLast / ctx.baseVNV, (1 / ctx.months)) : 1.0;
+      Math.pow(inflNow, (1 / ctx.months)) : 1.0;
    ctx.annualInflation = (Math.pow(ctx.monthlyInflation, 12) - 1) * 100;
    // Amount already paid and left to be paid
    ctx.monthsPaid = Math.min(ctx.months, n);
    ctx.monthsLeft = n - ctx.monthsPaid;
    ctx.amountPaid = ctx.monthsPaid * ctx.payment;
    ctx.amountLeft = ctx.monthsLeft * ctx.payment;
+   // The original loan amount, in today's króna
+   ctx.amountStart = amount * inflNow;
    ctx.amountNow = 0.0;
    // Generate all payments as well as a final sentinel state
    // with amt == newAmt == 0
    var a = [];
+   var totalInterest = 0.0;
+   var totalPaid = 0.0;
    for (var i = 0; i <= n; i++) {
       var vx = G * r;
       var nG = (i == n) ? G : G + vx - ctx.payment;
@@ -258,23 +264,42 @@ function calcLoan(amount, interest, n, wrong, year, month, futureInflation) {
          // Remember the principal as it stands now
          // (after the last available index period)
          ctx.amountNow = nG;
-      var vnv = lookupVNV(thisYear, thisMonth, 0, ctx.futureInflation) || 100.0;
+      var vnv = lookupVNV(thisYear, thisMonth, 0, ctx.futureInflation);
+      var vh = lookupVH(thisYear, thisMonth, 0, ctx.futureInflation);
+      var infl = vnv / ctx.baseVNV; // Inflation ratio at this point
+      var valueNow = ctx.amountStart * (vh / ctx.baseVH) / infl;
       a.push(
          {
             ix : i + 1,
             year : thisYear,
             month : thisMonth,
             date : new Date(thisYear, thisMonth), // Month is 0-based
-            amt : G,
-            amtInflated : G * vnv / ctx.baseVNV,
+            amt : G, // The króna at the origination date
+            amtInflated : G * infl, // The króna at the time
+            amtNow : G * inflNow, // Today's króna
+            // Calculate the value of the property in today's króna,
+            // by multiplying the base loan amount in today's króna
+            // with the increase in property prices and dividing by
+            // the increase in consumer prices.
+            valueNow : valueNow,
+            // Appreciation in value, in today's króna
+            apprNow : valueNow - ctx.amountStart,
+            // Accumulated interest to date, in today's króna
+            interestNow : totalInterest,
+            // Accumulated payments to date, in today's króna
+            paidNow : totalPaid,
             vx : vx,
             newAmt : nG,
             vnv : vnv,
-            vnvRel : ctx.baseVNV / vnv
+            vnvRel : 1 / infl
          }
       );
       // Update running principal
       G = nG;
+      // Add up the total interest paid
+      totalInterest += vx * inflNow;
+      // Add up the total amount paid
+      totalPaid += ctx.payment * inflNow;
    }
    ctx.a = a;
    return ctx;
@@ -297,16 +322,19 @@ function displayLoan(ctx) {
    $(".result-inflated-paid").text(toCurrency(ctx.amountPaid * vnvLast / ctx.baseVNV));
    $(".result-inflated-left").text(toCurrency(ctx.amountLeft * vnvLast / ctx.baseVNV));
    // Show principal
-   $("#result-principal").text(toCurrency(ctx.amount));
-   $(".result-principal-now").text(toCurrency(ctx.amountNow));
+   $(".result-principal").text(toCurrency(ctx.amount));
+   $(".result-principal-now").text(toCurrency(ctx.amountStart));
+   // Amount owed as it currently stands
+   var inflatedNow = ctx.amountNow * vnvLast / ctx.baseVNV;
+   $(".result-inflated-now").text(toCurrency(inflatedNow));
+   // Value of asset in today's króna
+   var valueNow = ctx.amount * vhLast / ctx.baseVH;
+   $(".result-value-now").text(toCurrency(valueNow));
+   $(".result-equity-now").text(toCurrency(valueNow - inflatedNow));
    // Hide the past-future legend if the loan is not currently open
    $("#legend-principal").css("display", ctx.monthsLeft > 0 ? "block" : "none");
-   var principalNow = ctx.amount * vnvLast / ctx.baseVNV;
-   $("#result-principal-now").text(toCurrency(principalNow));
    // Hide the past-future legend if the loan is not currently open
    $("#legend-inflated").css("display", ctx.monthsLeft > 0 ? "block" : "none");
-   var amountNow = ctx.amountNow * vnvLast / ctx.baseVNV;
-   $(".result-inflated-now").text(toCurrency(amountNow));
    // Show total amount repaid
    $("#result-total").text(toCurrency(ctx.payment * ctx.n));
    var totalNow = ctx.payment * ctx.n * vnvLast / ctx.baseVNV;
@@ -397,6 +425,10 @@ function displayGraphs(ctx) {
    setInflationOptions("#inflation-future", ctx.annualInflation);
    // Display ratio graphs
    displayRatioGraphs(ctx);
+   // Display equity outcome graph
+   displayOutcomeGraph(ctx, false);
+   // Display rent outcome graph
+   displayOutcomeGraph(ctx, true);
 }
 
 function displayRatioGraph(id, cls, item1, item2, text1, text2, unit, decimals) {
@@ -457,6 +489,7 @@ function displayRatioGraph(id, cls, item1, item2, text1, text2, unit, decimals) 
 }
 
 function displayRatioGraphs(ctx) {
+   // Display four graphs
    displayRatioGraph("canvas-ratio-1", "vnv",
       ctx.baseVNV,
       vnvLast,
@@ -623,7 +656,7 @@ function displayPrincipalGraph(ctx, inflated) {
          // New and existing bars: update
          .merge(bars)
             .attr("y", function(d) { return y(valueFunc(d)); })
-            .attr("height", function(d) { return Math.max(0, height - y(valueFunc(d))); })
+            .attr("height", function(d) { return Math.max(0, y(0) - y(valueFunc(d))); })
    };
 
    makeBars(inflated ? "inflated" : "principal",
@@ -753,7 +786,7 @@ function displayPaymentGraph(ctx, inflated) {
       .attr("x", function(d) { return x(d.date); })
       .attr("y", function(d) { return y(amortFunc(d)); })
       .attr("width", widthFunc)
-      .attr("height", function(d) { return Math.max(0, height - y(amortFunc(d))); })
+      .attr("height", function(d) { return Math.max(0, y(0) - y(amortFunc(d))); })
       .on("mouseover", function(d, i) {
          tooltip.transition()
             .duration(100)
@@ -832,7 +865,6 @@ function displayPaymentGraph(ctx, inflated) {
          .attr("y", y(0) - 52)
          .attr("dy", "1.4em")
          .text("Afborganir");
-
 }
 
 function displayInflationGraph(ctx, inverse) {
@@ -855,7 +887,7 @@ function displayInflationGraph(ctx, inverse) {
    for (var i = start; i <= end; i++) {
       var thisYear = Math.floor(i / 12);
       var thisMonth = i % 12;
-      var vnv = lookupVNV(thisYear, thisMonth) || 100.0;
+      var vnv = lookupVNV(thisYear, thisMonth);
       a.push({
          year : thisYear,
          month : thisMonth,
@@ -899,6 +931,7 @@ function displayInflationGraph(ctx, inverse) {
       .attr("height", height);
 
    var yDomain = inverse ? d3.extent(a, function(d) { return d.vnvRel; }) : [0, 1000];
+   var yMin = yDomain[0];
    var y = d3.scaleLinear()
       .domain(yDomain)
       .range([height, 0]);
@@ -944,7 +977,7 @@ function displayInflationGraph(ctx, inverse) {
       .attr("x", function(d) { return x(d.date); })
       .attr("y", function(d) { return y(d.vnvRel); })
       .attr("width", widthFunc)
-      .attr("height", function(d) { return Math.max(0, height - y(d.vnvRel)); })
+      .attr("height", function(d) { return Math.max(0, y(yMin) - y(d.vnvRel)); })
       .on("mouseover", function(d, i) {
          tooltip.transition()
             .duration(100)
@@ -960,6 +993,210 @@ function displayInflationGraph(ctx, inverse) {
             .duration(100)
             .style("opacity", 0);
       });
+}
 
+function displayOutcomeGraph(ctx, showRent) {
+
+   var a = ctx.a;
+
+   var canvasId = showRent ? "#canvas-rent" : "#canvas-outcome";
+   // Determine the drawing surface
+   var $canvas = $(canvasId);
+   var HEIGHT = 280;
+   var margin = { top: 10, right: 20, bottom: 20, left: 50 },
+      width = $canvas.width() - margin.right - margin.left,
+      height = HEIGHT - margin.top - margin.bottom;
+   // The graphics canvas
+   $canvas.html("");
+
+   // Create the time scale for the x-axis
+   var x = d3.scaleTime()
+      .domain(d3.extent(a, function(d) { return d.date; }))
+      .rangeRound([0, width]);
+
+   var xAxis = d3.axisBottom(x)
+      .tickFormat(function(d) {
+         if (d.getMonth() == 0)
+            // January: return the year
+            return d.getFullYear().toFixed(0);
+         // Otherwise, return the month name
+         return monthsUC[d.getMonth()];
+      });
+
+   // Create tooltip div
+   var tooltip = d3.select(canvasId)
+      .append("div")
+         .attr("class", "tooltip");
+   var tooltipText = tooltip.append("div");
+
+   var g = d3.select(canvasId)
+      .append("svg")
+         .attr("width", width + margin.right + margin.left)
+         .attr("height", height + margin.top + margin.bottom)
+      .append("g")
+         .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+   // Color the graph background
+   g.append("rect")
+      .attr("class", "background")
+      .attr("x", 0)
+      .attr("y", 0)
+      .attr("width", width)
+      .attr("height", height);
+
+   // Draw the X axis (time series by months)
+   g.append("g")
+      .attr("class", "x axis")
+      .attr("transform", "translate(0," + height + ")")
+      .call(xAxis);
+
+   // Draw the Y axis legend
+   g.append("g")
+      .attr("class", "legend-y")
+      .append("text")
+         .attr("x", 6)
+         .attr("y", -margin.left)
+         .attr("dy", "0.8em")
+         .attr("transform", "rotate(270)")
+         .style("text-anchor", "end")
+         .text("m.kr.");
+
+   var yExtent = showRent ?
+      [
+         d3.min(a, function(d) { return Math.min(d.apprNow, d.interestNow); }),
+         d3.max(a, function(d) { return Math.max(d.apprNow, d.interestNow); })
+      ] :
+      [0, d3.max(a, function(d) { return Math.max(d.valueNow, d.amtNow); })];
+   var y = d3.scaleLinear()
+      .domain(yExtent)
+      .range([height, 0])
+      .nice();
+
+   var yAxis = d3.axisLeft(y)
+      .tickFormat(function(d) {
+         // Show Y-axis ticks in millions with one decimal
+         return toFixed(d / 1000000, 1);
+      });
+
+   // Draw the Y axis (amounts)
+   g.append("g")
+      .attr("class", "y axis")
+      .call(yAxis);
+
+   var widthFunc = function(d, i) {
+      // Make the bar wide enough to reach to the next date
+      if (i + 1 >= a.length)
+         // Last (sentinel) bar: its height is always 0; return width 0
+         return 0;
+      return Math.max(1, x(a[i+1].date) - x(a[i].date));
+   };
+
+   // Draw bars representing the equity or the cost of the loan
+   var drawBars = function(cls, hoverClass, topFunc, bottomFunc, tooltipLocFunc, tooltipFunc) {
+      var bars = g.selectAll("rect.bar." + cls)
+         .data(a, function(d) { return d.date.toISOString(); }); // Key function
+      var e = bars
+         // New bars: create
+         .enter().append("rect")
+            .attr("class", function(d) {
+               if (d.year == yearNow && d.month == monthNow)
+                  return "bar now " + cls;
+               if (d.year < yearNow || (d.year == yearNow && d.month < monthNow))
+                  return "bar past " + cls;
+               return "bar " + cls;
+            })
+            .attr("x", function(d) { return x(d.date); })
+            .attr("width", widthFunc)
+            .attr("id", function(d) { return cls + "-" + keyYM(d.year, d.month); });
+      if (tooltipFunc)
+         e.on("mouseover", function(d, i) {
+            tooltip.transition()
+               .duration(100)
+               .style("opacity", .8);
+            tooltipText
+               .html("<b>" + monthsUC[d.month] + " " + d.year + "</b><br>" +
+                  tooltipFunc(d) + "<br>");
+            tooltip
+               .style("left", (x(d.date) + widthFunc(d, i) / 2 + margin.left - 23) + "px")
+               .style("top", (y(tooltipLocFunc(d)) - TOOLTIP_HEIGHT_2) + "px");
+            if (hoverClass)
+               // Highlight the equity portion
+               $("#" + hoverClass + "-" + keyYM(d.year, d.month)).addClass("hover");
+         })
+         .on("mouseout", function(d) {
+            tooltip.transition()
+               .duration(100)
+               .style("opacity", 0);
+            if (hoverClass)
+               // De-highlight the equity portion
+               $("#" + hoverClass + "-" + keyYM(d.year, d.month)).removeClass("hover");
+         });
+      // New and existing bars: update
+      e.merge(bars)
+         .attr("y",
+            function(d) {
+               return y(Math.max(topFunc(d), bottomFunc(d)));
+            }
+         )
+         .attr("height",
+            function(d) {
+               var top = topFunc(d);
+               var bottom = bottomFunc(d);
+               // Find the higher data value, i.e. the one with the lower y-coordinate
+               var topVal = Math.max(top, bottom);
+               // Find the lower data value, i.e. the one with the higher y-coordinate
+               var bottomVal = Math.min(top, bottom);
+               // Calculate the height
+               return Math.max(0, y(bottomVal) - y(topVal));
+            }
+         )
+         .classed("neg", function(d) { return topFunc(d) < bottomFunc(d); });
+   };
+
+   if (showRent) {
+      // Draw bars for total amount paid and owed at each point in time
+      drawBars("cost", null,
+         function(d) { return d.interestNow; }, // topFunc
+         function(d) { return 0; }, // bottomFunc
+         function(d) { return d.interestNow; },
+         function(d) {
+            // Tooltip text
+            var rent = 0.0;
+            if (d.ix > 1)
+               rent = (d.interestNow - d.apprNow) / (d.ix - 1);
+            return "Húsaleiga:<br>" + toCurrency(rent);
+         }
+      );
+   }
+   else {
+      // Draw bars for amount owed at each point in time
+      var tooltipLocFunc = function(d) { return Math.max(d.valueNow, d.amtNow); };
+      var tooltipTextFunc =
+         function(d) {
+            // Tooltip text
+            return "Eigið fé:<br>" + toCurrency(d.valueNow - d.amtNow);
+         };
+      drawBars("loan", "equity",
+         function(d) { return d.amtNow; }, // topFunc
+         function(d) { return 0; }, // bottomFunc
+         tooltipLocFunc,
+         tooltipTextFunc
+      );
+      drawBars("equity", null,
+         function(d) { return d.valueNow; }, // topFunc
+         function(d) { return d.amtNow; }, // bottomFunc
+         tooltipLocFunc,
+         tooltipTextFunc
+      );
+   }
+
+   // Draw valuation line on top
+   var line = d3.line()
+      .curve(d3.curveCatmullRom) // Smoothing algorithm
+      .x(function(d) { return x(d.date); })
+      .y(function(d) { return y(showRent ? d.apprNow : d.valueNow); });
+   g.append("path")
+      .attr("class", "line")
+      .attr("d", line(a));
 }
 
