@@ -14,4 +14,4 @@ sem JavaScript lista (Array).
 Vefsíðan notar jQuery, D3, Bootstrap og Material Design sniðmát.
 
 *Copyright(C) 2017 Vilhjálmur Þorsteinsson.*
-Frumforritin eru undir MIT leyfi.
+Frumforritin eru undir MIT leyfi. Breytingabeiðnir (*pull requests*) velkomnar!
