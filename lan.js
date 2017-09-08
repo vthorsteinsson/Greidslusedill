@@ -897,7 +897,9 @@ function displayInflationGraph(ctx, inverse) {
          year : thisYear,
          month : thisMonth,
          date : new Date(thisYear, thisMonth),
-         vnvRel : inverse ? 1000.0 * vnv / ctx.baseVNV : 1000.0 * ctx.baseVNV / vnv
+         vnvRel : inverse ?
+            1000.0 * vnv / ctx.baseVNV - 1000 :
+            1000.0 * ctx.baseVNV / vnv
       });
    }
    // Create the time scale for the x-axis
@@ -936,12 +938,10 @@ function displayInflationGraph(ctx, inverse) {
       .attr("height", height);
 
    var yDomain = inverse ? d3.extent(a, function(d) { return d.vnvRel; }) : [0, 1000];
-   var yMin = yDomain[0];
    var y = d3.scaleLinear()
       .domain(yDomain)
-      .range([height, 0]);
-   if (inverse)
-      y = y.nice();
+      .range([height, 0])
+      .nice();
 
    var yAxis = d3.axisLeft(y)
       .tickFormat(function(d) {
@@ -980,9 +980,9 @@ function displayInflationGraph(ctx, inverse) {
       })
       .attr("id", function(d) { return barId + "-" + keyYM(d.year, d.month); })
       .attr("x", function(d) { return x(d.date); })
-      .attr("y", function(d) { return y(d.vnvRel); })
+      .attr("y", function(d) { return y(Math.max(0, d.vnvRel)); })
       .attr("width", widthFunc)
-      .attr("height", function(d) { return Math.max(0, y(yMin) - y(d.vnvRel)); })
+      .attr("height", function(d) { return Math.abs(y(0) - y(d.vnvRel)); })
       .on("mouseover", function(d, i) {
          tooltip.transition()
             .duration(100)
@@ -991,7 +991,7 @@ function displayInflationGraph(ctx, inverse) {
             .html("<b>" + monthsUC[d.month] + " " + d.year + "</b><br>" + toCurrency(d.vnvRel) + "<br>");
          tooltip
             .style("left", (x(d.date) + widthFunc(d, i) / 2 + margin.left - 23) + "px")
-            .style("top", (y(d.vnvRel) - TOOLTIP_HEIGHT) + "px");
+            .style("top", (y(Math.max(0, d.vnvRel)) - TOOLTIP_HEIGHT) + "px");
       })
       .on("mouseout", function(d) {
          tooltip.transition()
