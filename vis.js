@@ -1,5 +1,7 @@
 
 // Vísitölur húsnæðisverðs og neysluverðs
+// Sjá https://www.skra.is/markadurinn/talnaefni/visitolur-kaups-og-leiguverds/
+// og https://hagstofa.is/utgafur/helstu-visitolur/
 
 var vis = {
 "1988-05" : { vnv: 100.0 },
@@ -355,6 +357,11 @@ var vis = {
 "2017-07" : { vh:578.0,vnv:442.9 },
 "2017-08" : { vh:583.6,vnv:444.0 },
 "2017-09" : { vh:588.4,vnv:444.6 },
-"2017-10" : { vh:588.4,vnv:446.7 }, /* Vantar að uppfæra VH */
+"2017-10" : { vh:589.4,vnv:446.7 },
+"2017-11" : { vh:585.1,vnv:446.0 },
+"2017-12" : { vh:586.3,vnv:447.2 },
+"2018-01" : { vh:592.1,vnv:446.8 },
+"2018-02" : { vh:594.9,vnv:449.5 },
+"2018-03" : { vh:594.9,vnv:452.0 }, /* Vantar að uppfæra VH */
 };
 
