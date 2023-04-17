@@ -195,7 +195,7 @@ function init() {
    );
    // Initialize the list of years
    var yearControl = $("#taken-year");
-   for (var year = 1988; year <= 2017; year++) {
+   for (var year = 1988; year <= 2023; year++) {
       var ystr = year.toString();
       var opt = $("<option>").attr("value", ystr).text(ystr);
       if (year == defaults.year)
