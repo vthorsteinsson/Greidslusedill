@@ -1,6 +1,6 @@
 // Vísitölur húsnæðisverðs og neysluverðs
-// Sjá https://www.skra.is/markadurinn/talnaefni/visitolur-kaups-og-leiguverds/
-// og https://hagstofa.is/utgafur/helstu-visitolur/
+// Sjá https://fasteignaskra.is/gogn/fasteignagattin/fasteignavidskipti/visitolur-ibuda-og-leiguverds/
+// og https://hagstofa.is/talnaefni/efnahagur/verdlag/visitala-neysluverds/
 
 var vis = {
 "1988-05" : { vnv: 100.0 },
@@ -421,4 +421,4 @@ var vis = {
 "2022-12" : { vnv: 564.6, vh: 950.9 },
 "2023-01" : { vnv: 569.4, vh: 946.4 },
 "2023-02" : { vnv: 577.3, vh: 948.9 },
-}
+};
