@@ -3,40 +3,41 @@ import json
 import typing as t
 import datetime
 
+URL_VNV = "http://px.hagstofa.is/pxis/api/v1/is/Efnahagur/visitolur/1_vnv/1_vnv/VIS01000.px"
+URL_VH = "https://talnaefni.fasteignaskra.is/talnaefni/v1/ibudavisitala"
+BODY_VNV = {
+    "query": [
+        {
+            "code": "Vísitala",
+            "selection": {
+                "filter": "item",
+                "values": [
+                    "CPI"
+                ]
+            }
+        },
+        {
+            "code": "Liður",
+            "selection": {
+                "filter": "item",
+                "values": [
+                    "index"
+                ]
+            }
+        }
+    ],
+    "response": {
+        "format": "json"
+    }
+}
+
 def visitala_neysluverds() -> t.Dict[str, float]:
     """ Gets latest consumer price index for Statistics of Iceland """
 
-    url = "http://px.hagstofa.is/pxis/api/v1/is/Efnahagur/visitolur/1_vnv/1_vnv/VIS01000.px"
-    body = {
-        "query": [
-            {
-                "code": "Vísitala",
-                "selection": {
-                    "filter": "item",
-                    "values": [
-                        "CPI"
-                    ]
-                }
-            },
-            {
-                "code": "Liður",
-                "selection": {
-                    "filter": "item",
-                    "values": [
-                        "index"
-                    ]
-                }
-            }
-        ],
-        "response": {
-            "format": "json"
-        }
-    }
-
-    r = requests.post(url, json=body)
+    r = requests.post(URL_VNV, json=BODY_VNV)
     json_response = json.loads(r.content)
 
-    vnv = dict()
+    vnv: t.Dict[str, float] = dict()
     for row in json_response['data']:
         month = row['key'][0].replace("M", "-")
         vnv[month] = float(row['values'][0])
@@ -47,12 +48,10 @@ def visitala_neysluverds() -> t.Dict[str, float]:
 def visitala_ibudaverds() -> t.Dict[str, float]:
     """ Gets latest property price index for all properties in the capital region. """
 
-    url = "https://talnaefni.fasteignaskra.is/talnaefni/v1/ibudavisitala"
-
-    r = requests.get(url)
+    r = requests.get(URL_VH)
     json_response = json.loads(r.content)
 
-    vh = dict()
+    vh: t.Dict[str, float] = dict()
     for row in json_response:
         month = f"{row['Ar']}-{str(row['Manudur']).rjust(2, '0')}" 
         vh[month] = float(row['Vst_heild'])
@@ -67,18 +66,19 @@ def months_between(d1: datetime.date, d2: datetime.date) -> int:
 def check_data(data: t.Dict[str, float], origin: datetime.date) -> None:
     """ Checks if the data is within expected length raises Exception if errors are found. """
 
-    latest_date = datetime.datetime\
-        .strptime(f"{list(data.keys())[-1]}-01", '%Y-%m-%d')\
-        .date()
+    latest_date = (
+        datetime.datetime
+        .strptime(f"{list(data.keys())[-1]}-01", '%Y-%m-%d')
+        .date())
     
     if datetime.date.today() - datetime.timedelta(days=90) > latest_date:
-        raise Exception("Latest date is not within boundaries")
+        raise ValueError("Latest date is not within boundaries")
 
     if len(data) != months_between(latest_date, origin) + 1:
-        raise Exception("Missing dates in the dataset")
+        raise ValueError("Missing dates in the dataset")
 
 
-def main():
+def main() -> int:
     """ Constructs vis.js accoring to the original format of the file """
 
     vnv = visitala_neysluverds()
