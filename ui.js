@@ -22,7 +22,7 @@ var defaults = {
    interest : 4.6,
    year : 2006,
    month : 7,
-   numpmt : 480
+   numpmt : 300
 };
 
 function showStatus(id, err) {
@@ -195,7 +195,8 @@ function init() {
    );
    // Initialize the list of years
    var yearControl = $("#taken-year");
-   for (var year = 1988; year <= 2017; year++) {
+   var currentYear = new Date().getFullYear();
+   for (var year = 1988; year <= currentYear; year++) {
       var ystr = year.toString();
       var opt = $("<option>").attr("value", ystr).text(ystr);
       if (year == defaults.year)
